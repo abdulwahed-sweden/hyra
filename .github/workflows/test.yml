@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      DB_ENGINE: sqlite
+      DB_NAME: ":memory:"
+      SECRET_KEY: ci-test-key
+      DEBUG: "True"
+      ALLOWED_HOSTS: "*"
+      CACHE_BACKEND: memory
+      ELASTICSEARCH_URL: http://localhost:9200
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - run: python manage.py migrate --noinput
+
+      - run: python manage.py test tests -v2
