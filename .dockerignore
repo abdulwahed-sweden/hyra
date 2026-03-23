@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+.env.docker
+.claude
+__pycache__
+*.pyc
+staticfiles
+db.sqlite3
+.dockerignore
