@@ -1,0 +1,37 @@
+<nav class="navbar navbar-expand-lg sticky-top bg-white border-bottom">
+<div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <span class="brand-mark">H</span> Hyra
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto me-3 gap-1">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'landing' %}active fw-semibold{% endif %}" href="/">
+                    <i class="bi bi-house me-1"></i>Home
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active fw-semibold{% endif %}" href="/dashboard/">
+                    <i class="bi bi-grid-1x2 me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#api-docs">
+                    <i class="bi bi-book me-1"></i>API Docs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#health">
+                    <i class="bi bi-heart-pulse me-1"></i>Health
+                </a>
+            </li>
+        </ul>
+        <a class="btn btn-outline-dark btn-sm" href="https://github.com/abdulwahed-sweden/hyra" target="_blank">
+            <i class="bi bi-github me-1"></i>GitHub
+        </a>
+    </div>
+</div>
+</nav>

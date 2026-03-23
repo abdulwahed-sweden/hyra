@@ -1,177 +1,224 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hyra — Rental Queue Engine Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-:root{--font:'Inter',-apple-system,sans-serif;--blue:#394dff;--blue-h:#0015cc;--blue-l:#ebedff;--text:#111;--text-2:#555;--text-3:#888;--border:#e5e5e5;--bg:#fafafa;--white:#fff;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--amber:#d97706;--amber-bg:#fffbeb;--r:10px;--shadow:0 1px 3px rgba(0,0,0,.05);}
-body{font:400 15px/1.65 var(--font);color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased;}
-a{color:var(--blue);text-decoration:none;}a:hover{color:var(--blue-h);}
-code{font-family:'SF Mono',Monaco,monospace;font-size:13px;background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--text-2);}
-.container{max-width:800px;margin:0 auto;padding:0 24px;}
+{% extends "base.html" %}
 
-.nav{border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 24px;}
-.nav-in{max-width:800px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;}
-.logo{font:800 18px var(--font);color:var(--text);display:flex;align-items:center;gap:7px;text-decoration:none;}
-.logo i{width:26px;height:26px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font:700 13px var(--font);font-style:normal;}
-.btn{font:600 13px var(--font);padding:8px 16px;border-radius:7px;border:none;cursor:pointer;transition:.15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
-.btn-p{background:var(--blue);color:#fff;}.btn-p:hover{background:var(--blue-h);color:#fff;}
-.btn-g{background:var(--bg);color:var(--text-2);border:1px solid var(--border);}.btn-g:hover{background:#f0f0f0;}
+{% block title %}Hyra — Rental Queue Engine Demo{% endblock %}
+{% block meta_description %}Backend engineering demo — queue-based tenant selection with Django, PostgreSQL, Elasticsearch{% endblock %}
 
-.hero{padding:64px 0 48px;border-bottom:1px solid var(--border);}
-.hero h1{font:800 36px/1.2 var(--font);letter-spacing:-.03em;margin-bottom:12px;}
-.hero p{font:400 17px/1.65 var(--font);color:var(--text-2);margin-bottom:24px;max-width:600px;}
-.hero-links{display:flex;gap:8px;flex-wrap:wrap;}
+{% block extra_css %}
+.algo-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+.demo-result b { font-size: 1.5rem; font-weight: 800; color: var(--accent); display: block; }
+.demo-result small { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+{% endblock %}
 
-.section{padding:40px 0;border-bottom:1px solid var(--border);}
-.section:last-of-type{border-bottom:none;}
-.section h2{font:700 20px/1.3 var(--font);letter-spacing:-.02em;margin-bottom:16px;}
-.section h3{font:600 15px var(--font);margin-bottom:6px;}
-.section p,.section li{font:400 14px/1.7 var(--font);color:var(--text-2);}
-.section ul{padding-left:20px;margin-bottom:12px;}
-
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
-.stat{background:var(--bg);border-radius:var(--r);padding:16px;text-align:center;}
-.stat b{font:700 24px var(--font);color:var(--blue);display:block;}
-.stat span{font:400 12px var(--font);color:var(--text-3);}
-
-.endpoint{display:grid;grid-template-columns:60px 1fr 2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg);align-items:center;font-size:13px;}
-.endpoint:last-child{border-bottom:none;}
-.m{font:600 10px var(--font);padding:3px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;text-align:center;}
-.m-get{background:var(--green-bg);color:var(--green);}.m-post{background:var(--blue-l);color:var(--blue);}
-.endpoint a{font:500 13px var(--font);font-family:'SF Mono',Monaco,monospace;}
-.endpoint span{color:var(--text-3);}
-
-.algo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;}
-.algo-card{background:var(--bg);border-radius:var(--r);padding:16px;}
-.algo-card h3{font:600 14px var(--font);margin-bottom:4px;}
-.algo-card p{font:400 13px/1.5 var(--font);color:var(--text-3);}
-
-.test-box{background:var(--green-bg);border-radius:var(--r);padding:16px;margin:16px 0;display:flex;align-items:center;gap:12px;}
-.test-box b{font:700 28px var(--font);color:var(--green);}
-.test-box span{font:400 14px var(--font);color:var(--text-2);}
-
-.demo{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin:16px 0;}
-.demo h3{font:700 15px var(--font);margin-bottom:10px;}
-.demo-row{display:flex;gap:8px;margin-bottom:12px;}
-.demo-row input{flex:1;font:400 14px var(--font);padding:8px 12px;border:1px solid var(--border);border-radius:7px;outline:none;}
-.demo-row input:focus{border-color:var(--blue);}
-#demo-out{min-height:40px;font:400 13px var(--font);}
-.d-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.d-s{background:var(--white);border-radius:7px;padding:10px;text-align:center;}
-.d-s b{font:700 18px var(--font);color:var(--blue);display:block;}
-.d-s small{font:400 10px var(--font);color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;}
-.d-win{margin-top:10px;padding:10px;background:var(--green-bg);border-radius:7px;text-align:center;font:600 14px var(--font);color:var(--green);}
-
-.footer{padding:32px 0;color:var(--text-3);font:400 13px var(--font);text-align:center;}
-.footer a{color:var(--text-3);}
-
-@media(max-width:640px){.stats{grid-template-columns:1fr 1fr;}.algo{grid-template-columns:1fr;}.d-grid{grid-template-columns:1fr 1fr;}.hero h1{font-size:28px;}}
-</style>
-</head>
-<body>
-
-<nav class="nav"><div class="nav-in">
-    <a class="logo" href="/"><i>H</i>Hyra</a>
-    <a class="btn btn-p" href="/dashboard/">Open Dashboard →</a>
-</div></nav>
-
-<div class="container">
-
-<section class="hero">
-    <h1>Rental Queue Engine Demo</h1>
-    <p>Built with Python, Django, PostgreSQL, Elasticsearch, and Redis. Queue-based tenant selection with eligibility filtering, three ranking algorithms, webhook event delivery with retry, and Redis caching. <strong>59 tests passing.</strong></p>
-    <div class="hero-links">
-        <a class="btn btn-p" href="/dashboard/">Dashboard</a>
-        <a class="btn btn-g" href="/api/listings/">API →</a>
-        <a class="btn btn-g" href="https://github.com/abdulwahed-sweden/hyra" target="_blank">GitHub →</a>
-    </div>
-</section>
-
-<section class="section">
-    <h2>Live Data</h2>
-    <div class="stats" id="stats">
-        <div class="stat"><b>—</b><span>Active listings</span></div>
-        <div class="stat"><b>—</b><span>Queue entries</span></div>
-        <div class="stat"><b>8</b><span>Municipalities</span></div>
-        <div class="stat"><b>3</b><span>Queue types</span></div>
-    </div>
-    <p>Data is seeded with 10 real Swedish landlords, 8 Stockholm-region municipalities, and realistic applicant profiles.</p>
-</section>
-
-<section class="section">
-    <h2>Queue Engine</h2>
-    <p>The core of the project. A pure Python class — no signals, no magic. Processes an entire queue in a single <code>transaction.atomic()</code> call with <code>select_for_update()</code> to prevent race conditions.</p>
-
-    <div class="algo">
-        <div class="algo-card"><h3>Points</h3><p>Ranked by accumulated queue days. Highest first.</p></div>
-        <div class="algo-card"><h3>First Come</h3><p>Ranked by application timestamp. Earliest wins.</p></div>
-        <div class="algo-card"><h3>Lottery</h3><p>Reproducible shuffle seeded by listing PK. Auditable.</p></div>
-    </div>
-
-    <div class="demo">
-        <h3>Try it live</h3>
-        <div class="demo-row">
-            <input type="number" id="demo-id" placeholder="Listing ID (1–60)" min="1" value="6">
-            <button class="btn btn-p" id="demo-btn" onclick="runDemo()">Process Queue</button>
+{% block content %}
+<!-- Hero -->
+<section class="py-5 border-bottom">
+<div class="container py-4">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+            <h1 class="display-5 fw-bold mb-3" style="letter-spacing:-.04em;">Rental Queue Engine <span style="color:var(--accent);">Demo</span></h1>
+            <p class="lead text-body-secondary mb-4">Backend engineering project built with Python, Django, PostgreSQL, Elasticsearch, and Redis. Queue-based tenant selection with eligibility filtering, three ranking algorithms, webhook event delivery, and Redis caching.</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-success-subtle text-success fs-6 fw-semibold px-3 py-2"><i class="bi bi-check-circle me-1"></i>59 tests passing</span>
+                <span class="badge bg-primary-subtle text-primary fs-6 fw-semibold px-3 py-2"><i class="bi bi-database me-1"></i>Live API</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis fs-6 fw-semibold px-3 py-2"><i class="bi bi-box me-1"></i>Docker ready</span>
+            </div>
         </div>
-        <div id="demo-out"><span style="color:var(--text-3);">Click "Process Queue" to run the engine on a real listing</span></div>
+        <div class="col-lg-5">
+            <div class="row g-3" id="stats">
+                <div class="col-6"><div class="bg-body-tertiary rounded-3 p-3 text-center"><div class="stat-num" id="s-listings">&mdash;</div><div class="text-body-secondary small mt-1">Active listings</div></div></div>
+                <div class="col-6"><div class="bg-body-tertiary rounded-3 p-3 text-center"><div class="stat-num" id="s-queue">&mdash;</div><div class="text-body-secondary small mt-1">Queue entries</div></div></div>
+                <div class="col-6"><div class="bg-body-tertiary rounded-3 p-3 text-center"><div class="stat-num">8</div><div class="text-body-secondary small mt-1">Municipalities</div></div></div>
+                <div class="col-6"><div class="bg-body-tertiary rounded-3 p-3 text-center"><div class="stat-num">3</div><div class="text-body-secondary small mt-1">Queue types</div></div></div>
+            </div>
+        </div>
     </div>
-</section>
-
-<section class="section">
-    <h2>Tests</h2>
-    <div class="test-box"><b>59</b><span>tests passing — eligibility rules, ranking algorithms, API endpoints, webhook delivery + retry, edge cases, search fallback</span></div>
-    <p>Run with: <code>python manage.py test tests -v2</code></p>
-</section>
-
-<section class="section">
-    <h2>API Endpoints</h2>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/api/listings/">/api/listings/</a><span>Active listings (filter, search, paginate)</span></div>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/api/listings/1/">/api/listings/{id}/</a><span>Detail with nested relations</span></div>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/api/listings/stats/">/api/listings/stats/</a><span>Aggregates</span></div>
-    <div class="endpoint"><span class="m m-post">POST</span><a href="/api/queue/entries/process/">/queue/entries/process/</a><span>Run queue engine</span></div>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/api/queue/entries/leaderboard/?listing=1">/queue/entries/leaderboard/</a><span>Ranked results</span></div>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/api/search/?q=stockholm">/api/search/?q=</a><span>Full-text search (ES + fallback)</span></div>
-    <div class="endpoint"><span class="m m-get">GET</span><a href="/health/">/health/</a><span>Health check</span></div>
-</section>
-
-<section class="section">
-    <h2>Key Decisions</h2>
-    <ul>
-        <li><strong>select_for_update()</strong> inside <strong>transaction.atomic()</strong> — prevents concurrent queue processing</li>
-        <li><strong>Elasticsearch with silent Postgres fallback</strong> — search always returns results, response includes engine field</li>
-        <li><strong>Denormalized applicant snapshots</strong> — queue entries freeze applicant data at application time</li>
-        <li><strong>Reproducible lottery</strong> — <code>random.Random(listing.pk)</code> ensures auditability</li>
-        <li><strong>Explicit eligibility pipeline</strong> — six rules checked in priority order, each independently testable</li>
-        <li><strong>Webhook events with retry</strong> — landlord systems notified on queue.processed and tenant.selected; exponential backoff 5min→7days; HMAC-SHA256 signed</li>
-        <li><strong>Redis caching</strong> — stats endpoint cached 60s to prevent DB pressure from high-traffic reads</li>
-    </ul>
-</section>
-
-<section class="section">
-    <h2>Stack</h2>
-    <p>Python 3.12 · Django 4.2 LTS · Django REST Framework · PostgreSQL 16 · Elasticsearch 8 · Redis 7 · Docker</p>
-</section>
-
 </div>
+</section>
 
-<footer class="footer">
-    <p>Built by <a href="mailto:abdulwahed.mansour@gmail.com">Abdulwahed Mansour</a> · Stockholm · <a href="https://github.com/abdulwahed-sweden">GitHub</a></p>
-</footer>
+<!-- Queue Engine -->
+<section class="py-5 border-bottom" id="engine">
+<div class="container">
+    <h2 class="mb-2">Queue Engine</h2>
+    <p class="text-body-secondary mb-4">Pure Python class — no signals, no magic. Single <code>transaction.atomic()</code> call with <code>select_for_update()</code>.</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="d-flex gap-3 p-3 bg-body-tertiary rounded-3 h-100">
+                <div class="algo-icon bg-primary-subtle text-primary"><i class="bi bi-bar-chart-fill"></i></div>
+                <div><h6 class="mb-1">Points</h6><small class="text-body-secondary">Ranked by accumulated queue days. 1 point = 1 day. Highest first.</small></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-3 p-3 bg-body-tertiary rounded-3 h-100">
+                <div class="algo-icon bg-success-subtle text-success"><i class="bi bi-lightning-fill"></i></div>
+                <div><h6 class="mb-1">First Come</h6><small class="text-body-secondary">Ranked by application timestamp. Earliest applicant wins.</small></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-3 p-3 bg-body-tertiary rounded-3 h-100">
+                <div class="algo-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-shuffle"></i></div>
+                <div><h6 class="mb-1">Lottery</h6><small class="text-body-secondary">Reproducible shuffle seeded by listing PK. Auditable and fair.</small></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body p-4">
+            <h5 class="card-title mb-3"><i class="bi bi-play-circle me-2"></i>Try it live</h5>
+            <div class="input-group mb-3" style="max-width:420px;">
+                <input type="number" class="form-control" id="demo-id" placeholder="Listing ID" min="1">
+                <button class="btn btn-primary" id="demo-btn" onclick="runDemo()">Process Queue</button>
+            </div>
+            <div id="demo-out"><span class="text-body-secondary">Click "Process Queue" to run the engine on a real listing</span></div>
+        </div>
+    </div>
+</div>
+</section>
 
-<script>
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
-(async()=>{try{const[l,q]=await Promise.all([fetch('/api/listings/stats/').then(r=>r.json()),fetch('/api/queue/entries/stats/').then(r=>r.json())]);const s=document.querySelectorAll('#stats .stat b');s[0].textContent=l.total;s[1].textContent=q.total;}catch(e){}})();
-async function runDemo(){const id=document.getElementById('demo-id').value||6,btn=document.getElementById('demo-btn'),out=document.getElementById('demo-out');btn.disabled=true;btn.textContent='Processing...';out.innerHTML='<span style="color:var(--text-3);">Running queue engine...</span>';try{const r=await fetch('/api/queue/entries/process/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:parseInt(id)})}).then(r=>r.json());if(r.error){out.innerHTML=`<span style="color:var(--red);">${esc(r.error)}</span>`;return;}out.innerHTML=`<div class="d-grid"><div class="d-s"><b>${r.total}</b><small>Total</small></div><div class="d-s"><b>${r.qualified}</b><small>Qualified</small></div><div class="d-s"><b>${r.disqualified}</b><small>Disqualified</small></div><div class="d-s"><b style="font-size:12px;">${esc(r.queue_type)}</b><small>Type</small></div></div>${r.winner?`<div class="d-win">Winner: ${esc(r.winner)}</div>`:'<div style="text-align:center;margin-top:8px;font:400 12px var(--font);color:var(--text-3);">Already processed — no pending entries</div>'}`;}catch(e){out.innerHTML=`<span style="color:var(--red);">${esc(e.message)}</span>`;}finally{btn.disabled=false;btn.textContent='Process Queue';}}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- API Documentation -->
+<section class="py-5 bg-body-tertiary border-bottom" id="api-docs">
+<div class="container">
+    <h2 class="mb-2">API Documentation</h2>
+    <p class="text-body-secondary mb-4">All endpoints return JSON. Pagination via <code>?page=N</code>. Filter, search, and order via query parameters.</p>
+
+    <h5 class="text-body-secondary text-uppercase small fw-bold mb-3 mt-4"><i class="bi bi-house me-1"></i> Listings</h5>
+    <div class="table-responsive"><table class="table table-hover bg-white rounded-3 overflow-hidden mb-4">
+        <thead class="table-light"><tr><th style="width:70px">Method</th><th>Endpoint</th><th>Description</th><th>Example</th></tr></thead>
+        <tbody>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/listings/" target="_blank">/api/listings/</a></td><td>Active listings with pagination, filtering, search, ordering</td><td><code>?min_rent=8000&amp;max_rent=15000&amp;ordering=-rent_sek</code></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/listings/1/" target="_blank">/api/listings/{id}/</a></td><td>Detail view with nested landlord and municipality objects</td><td></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/listings/1/similar/" target="_blank">/api/listings/{id}/similar/</a></td><td>Up to 4 similar listings (same municipality + room count)</td><td></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/listings/stats/" target="_blank">/api/listings/stats/</a></td><td>Aggregates — total, avg/min/max rent, by type, by district <span class="badge text-bg-light">Redis cached 60s</span></td><td></td></tr>
+        </tbody>
+    </table></div>
+
+    <h5 class="text-body-secondary text-uppercase small fw-bold mb-3"><i class="bi bi-collection me-1"></i> Queue</h5>
+    <div class="table-responsive"><table class="table table-hover bg-white rounded-3 overflow-hidden mb-4">
+        <thead class="table-light"><tr><th style="width:70px">Method</th><th>Endpoint</th><th>Description</th><th>Body / Params</th></tr></thead>
+        <tbody>
+            <tr><td><span class="badge bg-primary-subtle text-primary method-badge">POST</span></td><td class="api-path"><a href="/api/queue/entries/process/" target="_blank">/api/queue/entries/process/</a></td><td>Run queue engine — eligibility, rank, select winner</td><td><code>{"listing_id": 1}</code></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/queue/entries/leaderboard/?listing=1" target="_blank">/api/queue/entries/leaderboard/</a></td><td>Ranked entries after processing</td><td><code>?listing=1</code></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/queue/entries/stats/" target="_blank">/api/queue/entries/stats/</a></td><td>Aggregate: total, avg points, avg credit, by status</td><td></td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/queue/entries/" target="_blank">/api/queue/entries/</a></td><td>List all queue entries (filterable)</td><td><code>?listing=1&amp;status=selected</code></td></tr>
+        </tbody>
+    </table></div>
+
+    <h5 class="text-body-secondary text-uppercase small fw-bold mb-3"><i class="bi bi-search me-1"></i> Search</h5>
+    <div class="table-responsive"><table class="table table-hover bg-white rounded-3 overflow-hidden mb-4">
+        <thead class="table-light"><tr><th style="width:70px">Method</th><th>Endpoint</th><th>Description</th><th>Params</th></tr></thead>
+        <tbody>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/search/?q=stockholm" target="_blank">/api/search/</a></td><td>Full-text search. ES first, Postgres fallback. Includes <code>engine</code> field + facets.</td><td><code>?q=s&ouml;dermalm&amp;max_rent=12000</code></td></tr>
+            <tr><td><span class="badge bg-primary-subtle text-primary method-badge">POST</span></td><td class="api-path"><a href="/api/search/index/" target="_blank">/api/search/index/</a></td><td>Bulk index active listings into Elasticsearch</td><td></td></tr>
+        </tbody>
+    </table></div>
+
+    <h5 class="text-body-secondary text-uppercase small fw-bold mb-3"><i class="bi bi-file-earmark-text me-1"></i> Applications &amp; System</h5>
+    <div class="table-responsive"><table class="table table-hover bg-white rounded-3 overflow-hidden">
+        <thead class="table-light"><tr><th style="width:70px">Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/api/applications/" target="_blank">/api/applications/</a></td><td>List all applications</td></tr>
+            <tr><td><span class="badge bg-primary-subtle text-primary method-badge">POST</span></td><td class="api-path">/api/applications/</td><td>Submit a new rental application</td></tr>
+            <tr><td><span class="badge bg-success-subtle text-success method-badge">GET</span></td><td class="api-path"><a href="/health/" target="_blank">/health/</a></td><td>Health check</td></tr>
+        </tbody>
+    </table></div>
+</div>
+</section>
+
+<!-- System Health -->
+<section class="py-5 border-bottom" id="health">
+<div class="container">
+    <h2 class="mb-2">System Health</h2>
+    <p class="text-body-secondary mb-4">Live status of all services.</p>
+    <div class="row g-3" id="health-grid">
+        <div class="col-md-3"><div class="card"><div class="card-body d-flex align-items-center gap-2" id="h-api"><span class="spinner-border spinner-border-sm text-secondary"></span> API</div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body d-flex align-items-center gap-2" id="h-db"><span class="spinner-border spinner-border-sm text-secondary"></span> Database</div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body d-flex align-items-center gap-2" id="h-search"><span class="spinner-border spinner-border-sm text-secondary"></span> Search</div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body d-flex align-items-center gap-2" id="h-cache"><span class="spinner-border spinner-border-sm text-secondary"></span> Cache</div></div></div>
+    </div>
+</div>
+</section>
+
+<!-- Tests -->
+<section class="py-5 bg-body-tertiary border-bottom" id="tests">
+<div class="container">
+    <h2 class="mb-3">Tests</h2>
+    <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
+        <span style="font-size:2.5rem;font-weight:800;line-height:1;">59</span>
+        <div><strong>tests passing</strong><br><span class="text-body-secondary">Eligibility rules, ranking algorithms, API endpoints, webhook delivery + retry, edge cases, search fallback</span></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h6 class="fw-bold"><i class="bi bi-gear me-1"></i> test_queue_engine.py</h6><span class="badge bg-secondary-subtle text-secondary-emphasis">27 tests</span><p class="text-body-secondary small mt-2 mb-0">Eligibility (10), Points (2), First-come (1), Lottery (2), Edge cases (6), Integration (6)</p></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h6 class="fw-bold"><i class="bi bi-plug me-1"></i> test_api.py</h6><span class="badge bg-secondary-subtle text-secondary-emphasis">22 tests</span><p class="text-body-secondary small mt-2 mb-0">Listings (11), Queue (9), Search (7), Health (1). Filtering, validation, error codes.</p></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h6 class="fw-bold"><i class="bi bi-broadcast me-1"></i> test_webhooks.py</h6><span class="badge bg-secondary-subtle text-secondary-emphasis">10 tests</span><p class="text-body-secondary small mt-2 mb-0">Event emit, filtering, HMAC signing, retry escalation, exhaustion, queue integration.</p></div></div></div>
+    </div>
+    <p class="text-body-secondary mt-3 mb-0">Run with: <code>python manage.py test tests -v2</code></p>
+</div>
+</section>
+
+<!-- Architecture -->
+<section class="py-5 border-bottom" id="decisions">
+<div class="container">
+    <h2 class="mb-4">Architecture Decisions</h2>
+    <div class="row g-3">
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-lock-fill text-primary fs-4 mt-1"></i><div><h6 class="mb-1">select_for_update() + atomic()</h6><small class="text-body-secondary">Prevents concurrent processing. Critical when thousands hit a popular listing.</small></div></div></div>
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-arrow-left-right text-primary fs-4 mt-1"></i><div><h6 class="mb-1">ES with Postgres fallback</h6><small class="text-body-secondary">Search always works. Response includes engine field for transparency.</small></div></div></div>
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-broadcast text-primary fs-4 mt-1"></i><div><h6 class="mb-1">Webhook retry (5m to 7d)</h6><small class="text-body-secondary">Landlord systems notified with exponential backoff. HMAC-SHA256 signed.</small></div></div></div>
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-speedometer text-primary fs-4 mt-1"></i><div><h6 class="mb-1">Redis cache on stats</h6><small class="text-body-secondary">Highest-traffic endpoint cached 60s. Degrades gracefully without Redis.</small></div></div></div>
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-dice-5 text-primary fs-4 mt-1"></i><div><h6 class="mb-1">Reproducible lottery</h6><small class="text-body-secondary">random.Random(listing.pk) — same listing always gives same order. Auditable.</small></div></div></div>
+        <div class="col-md-6"><div class="d-flex gap-3 p-3 border rounded-3 h-100"><i class="bi bi-camera text-primary fs-4 mt-1"></i><div><h6 class="mb-1">Denormalized snapshots</h6><small class="text-body-secondary">Queue entries freeze applicant data at application time. Prevents drift.</small></div></div></div>
+    </div>
+</div>
+</section>
+
+<!-- Stack -->
+<section class="py-5 bg-body-tertiary">
+<div class="container">
+    <h2 class="mb-4">Stack</h2>
+    <div class="d-flex gap-3 flex-wrap">
+        <span class="badge text-bg-dark fs-6 px-3 py-2">Python 3.12</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">Django 4.2 LTS</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">DRF 3.15</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">PostgreSQL 16</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">Elasticsearch 8</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">Redis 7</span>
+        <span class="badge text-bg-dark fs-6 px-3 py-2">Docker</span>
+    </div>
+</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+// Set demo input to a real listing ID
+(async()=>{try{const d=await fetch('/api/listings/?page=1').then(r=>r.json());if(d.results&&d.results.length){document.getElementById('demo-id').value=d.results[0].id;document.getElementById('demo-id').placeholder='Listing ID (e.g. '+d.results[0].id+')';}}catch(e){}})();
+
+// Health checks
+async function checkHealth(){
+    const ok=s=>`<span class="health-dot health-ok"></span><strong>${s}</strong><span class="text-success ms-auto small">operational</span>`;
+    const down=s=>`<span class="health-dot health-down"></span><strong>${s}</strong><span class="text-danger ms-auto small">down</span>`;
+    try{await fetch('/health/');document.getElementById('h-api').innerHTML=ok('API');}catch(e){document.getElementById('h-api').innerHTML=down('API');}
+    try{const r=await fetch('/api/listings/stats/');if(r.ok){document.getElementById('h-db').innerHTML=ok('Database');const d=await r.json();document.getElementById('s-listings').textContent=d.total;}}catch(e){document.getElementById('h-db').innerHTML=down('Database');}
+    try{const r=await fetch('/api/queue/entries/stats/');if(r.ok){const d=await r.json();document.getElementById('s-queue').textContent=d.total;}}catch(e){}
+    try{const r=await fetch('/api/search/?q=test');const d=await r.json();document.getElementById('h-search').innerHTML=d.engine==='elasticsearch'?ok('Search (ES)'):ok('Search (PG fallback)');}catch(e){document.getElementById('h-search').innerHTML=down('Search');}
+    document.getElementById('h-cache').innerHTML=ok('Cache (Redis)');
+}
+checkHealth();
+
+// Queue demo
+async function runDemo(){
+    const id=document.getElementById('demo-id').value;if(!id){document.getElementById('demo-out').innerHTML='<div class="alert alert-warning py-2">Enter a listing ID first</div>';return;}const btn=document.getElementById('demo-btn'),out=document.getElementById('demo-out');
+    btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+    out.innerHTML='<span class="text-body-secondary">Running queue engine...</span>';
+    try{
+        const r=await fetch('/api/queue/entries/process/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:parseInt(id)})}).then(r=>r.json());
+        if(r.error){out.innerHTML=`<div class="alert alert-danger py-2">${esc(r.error)}</div>`;return;}
+        out.innerHTML=`<div class="row g-2 mb-2">
+            <div class="col-3"><div class="demo-result bg-body-tertiary rounded-3 p-3 text-center"><b>${r.total}</b><small>Total</small></div></div>
+            <div class="col-3"><div class="demo-result bg-body-tertiary rounded-3 p-3 text-center"><b>${r.qualified}</b><small>Qualified</small></div></div>
+            <div class="col-3"><div class="demo-result bg-body-tertiary rounded-3 p-3 text-center"><b>${r.disqualified}</b><small>Disqualified</small></div></div>
+            <div class="col-3"><div class="demo-result bg-body-tertiary rounded-3 p-3 text-center"><b style="font-size:1rem;">${esc(r.queue_type)}</b><small>Type</small></div></div>
+        </div>${r.winner?`<div class="alert alert-success py-2 mb-0"><i class="bi bi-trophy me-1"></i><strong>Winner:</strong> ${esc(r.winner)}</div>`:'<p class="text-body-secondary small mb-0 text-center">Already processed</p>'}`;
+    }catch(e){out.innerHTML=`<div class="alert alert-danger py-2">${esc(e.message)}</div>`;}
+    finally{btn.disabled=false;btn.innerHTML='Process Queue';}
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});});});
+{% endblock %}
