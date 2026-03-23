@@ -20,7 +20,7 @@ app_port: 7860
 
 A backend engineering demo targeting the **Senior Backend Engineer** role at [HomeQ](https://homeq.se) (Vend/Schibsted). Built with HomeQ's exact stack to demonstrate queue-based tenant selection, architectural decision-making, and production patterns.
 
-> **Live demo:** Clone → `docker compose up --build` → [localhost:8000](http://localhost:8000)
+> **Live demo:** [abdulwahed-sweden-hyra.hf.space](https://abdulwahed-sweden-hyra.hf.space) | Local: `docker compose up --build` → [localhost:8000](http://localhost:8000)
 
 ---
 
