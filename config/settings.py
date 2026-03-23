@@ -65,17 +65,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Database — PostgreSQL
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME", default="hyra_demo"),
-        "USER": config("DB_USER", default="hyra"),
-        "PASSWORD": config("DB_PASSWORD", default="hyra_pass"),
-        "HOST": config("DB_HOST", default="localhost"),
-        "PORT": config("DB_PORT", default="5432"),
+# Database — PostgreSQL (default) or SQLite (for HF Spaces / quick demos)
+if config("DB_ENGINE", default="postgres") == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / config("DB_NAME", default="db.sqlite3"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME", default="hyra_demo"),
+            "USER": config("DB_USER", default="hyra"),
+            "PASSWORD": config("DB_PASSWORD", default="hyra_pass"),
+            "HOST": config("DB_HOST", default="localhost"),
+            "PORT": config("DB_PORT", default="5432"),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -130,13 +138,23 @@ ELASTICSEARCH_DSL = {
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
 
-# Cache — Redis for high-read endpoints (stats, points), falls back to local memory
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/0"),
+# Cache — Redis when available, otherwise in-memory (HF Spaces, local dev without Redis)
+try:
+    import redis as _redis_lib
+    _r = _redis_lib.from_url(config("REDIS_URL", default="redis://localhost:6379/0"))
+    _r.ping()
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": config("REDIS_URL", default="redis://localhost:6379/0"),
+        }
     }
-}
+except Exception:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 
 # CORS — allow all in dev
 CORS_ALLOW_ALL_ORIGINS = DEBUG

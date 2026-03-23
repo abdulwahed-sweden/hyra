@@ -1,0 +1,39 @@
+# Hugging Face Spaces Dockerfile
+# Runs with SQLite (no external DB needed) on port 7860
+
+FROM python:3.12-slim
+
+RUN useradd -m -u 1000 user
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/home/user/.local/bin:$PATH"
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libpq-dev curl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --chown=user . /app
+
+# Use SQLite for HF Spaces (no Postgres available)
+ENV DB_ENGINE=sqlite
+ENV DB_NAME=/app/db.sqlite3
+ENV SECRET_KEY=hf-spaces-demo-key
+ENV DEBUG=True
+ENV ALLOWED_HOSTS=*
+ENV ELASTICSEARCH_URL=http://localhost:9200
+ENV REDIS_URL=redis://localhost:6379/0
+
+USER user
+
+RUN python manage.py migrate --noinput && \
+    python manage.py seed_demo --clear && \
+    python manage.py collectstatic --noinput 2>/dev/null || true
+
+EXPOSE 7860
+
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:7860", "--workers", "2", "--timeout", "120"]
