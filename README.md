@@ -1,3 +1,12 @@
+---
+title: Hyra
+emoji: 🏠
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # Hyra — Rental Queue Engine
 
 [![Python](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://python.org)

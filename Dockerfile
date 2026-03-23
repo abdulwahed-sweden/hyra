@@ -1,22 +1,34 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DB_ENGINE=sqlite \
+    DB_NAME=/app/db.sqlite3 \
+    SECRET_KEY=hf-spaces-demo-key \
+    DEBUG=True \
+    ALLOWED_HOSTS=* \
+    ELASTICSEARCH_URL=http://localhost:9200 \
+    REDIS_URL=redis://localhost:6379/0 \
+    CACHE_BACKEND=memory
 
 WORKDIR /app
 
-# Install system dependencies for psycopg2
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc libpq-dev && \
+    apt-get install -y --no-install-recommends gcc libpq-dev git && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app
 
-RUN python manage.py collectstatic --noinput 2>/dev/null || true
+RUN python manage.py migrate --noinput && \
+    python manage.py seed_demo --clear && \
+    python manage.py collectstatic --noinput
 
-EXPOSE 8000
+RUN useradd -m -u 1000 user && chown -R user:user /app
+USER user
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+EXPOSE 7860
+
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:7860", "--workers", "2", "--timeout", "120"]

@@ -39,7 +39,9 @@ services:
       retries: 20
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.compose
     command: >
       sh -c "
         python manage.py migrate --noinput &&
