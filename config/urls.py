@@ -5,7 +5,6 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 
 
-# [M13] Health check endpoint for load balancers / container orchestration
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
@@ -17,5 +16,6 @@ urlpatterns = [
     path("api/queue/", include("apps.queue.urls")),
     path("api/search/", include("apps.search.urls")),
     path("api/applications/", include("apps.applications.urls")),
-    path("", TemplateView.as_view(template_name="dashboard.html"), name="dashboard"),
+    path("dashboard/", TemplateView.as_view(template_name="dashboard.html"), name="dashboard"),
+    path("", TemplateView.as_view(template_name="landing.html"), name="landing"),
 ]
