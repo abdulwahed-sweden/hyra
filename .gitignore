@@ -1,5 +1,6 @@
 # Hyra project
 .env
+.env.docker
 .venv/
 staticfiles/
 __pycache__/

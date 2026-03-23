@@ -45,21 +45,12 @@ services:
         python manage.py migrate --noinput &&
         python manage.py seed_demo --clear &&
         python manage.py collectstatic --noinput &&
-        gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2
+        gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120
       "
     ports:
       - "8000:8000"
-    environment:
-      - SECRET_KEY=dev-only-insecure-key
-      - DEBUG=True
-      - ALLOWED_HOSTS=*
-      - DB_NAME=hyra_demo
-      - DB_USER=hyra
-      - DB_PASSWORD=hyra_pass
-      - DB_HOST=db
-      - DB_PORT=5432
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - .env.docker
     depends_on:
       db:
         condition: service_healthy
