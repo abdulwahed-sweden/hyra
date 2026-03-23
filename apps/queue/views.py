@@ -19,6 +19,7 @@ class QueueViewSet(viewsets.ModelViewSet):
     serializer_class = QueueEntrySerializer
     filterset_fields = ["listing", "status"]
     ordering_fields = ["queue_points", "rank_position", "applied_at"]
+    ordering = ["id"]
 
     @action(detail=False, methods=["post"])
     def process(self, request):
@@ -57,6 +58,15 @@ class QueueViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # [H8] Validate listing_id is a valid integer
+        try:
+            listing_id = int(listing_id)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "listing must be a valid integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         entries = (
             QueueEntry.objects
             .filter(listing_id=listing_id, rank_position__isnull=False)
@@ -66,7 +76,7 @@ class QueueViewSet(viewsets.ModelViewSet):
 
         winner = entries.filter(status=QueueEntry.Status.SELECTED).first()
         return Response({
-            "listing_id": int(listing_id),
+            "listing_id": listing_id,
             "entries": serializer.data,
             "winner": winner.applicant_name if winner else None,
         })

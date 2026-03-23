@@ -1,9 +1,17 @@
 """Hyra URL configuration."""
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+
+# [M13] Health check endpoint for load balancers / container orchestration
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
+
 urlpatterns = [
+    path("health/", health_check, name="health-check"),
     path("admin/", admin.site.urls),
     path("api/listings/", include("apps.listings.urls")),
     path("api/queue/", include("apps.queue.urls")),

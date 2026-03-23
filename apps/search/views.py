@@ -7,7 +7,7 @@ field so the client knows which backend served the results.
 """
 import logging
 
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Max, Min, Q
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
@@ -21,6 +21,19 @@ from apps.listings.serializers import ListingListSerializer
 from decouple import config as env_config
 
 logger = logging.getLogger(__name__)
+
+# [H10] Module-level ES client singleton — avoids per-request connection leak
+ES_INDEX = "hyra_listings"
+_es_client = None
+
+
+def _get_es_client():
+    """Lazy singleton for Elasticsearch client to avoid connection leak."""
+    global _es_client
+    if _es_client is None:
+        es_url = env_config("ELASTICSEARCH_URL", default="http://localhost:9200")
+        _es_client = Elasticsearch([es_url])
+    return _es_client
 
 
 class ListingSearchView(APIView):
@@ -36,7 +49,11 @@ class ListingSearchView(APIView):
         rooms = request.query_params.get("rooms")
         has_balcony = request.query_params.get("has_balcony")
         allows_pets = request.query_params.get("allows_pets")
-        page = int(request.query_params.get("page", 1))
+        # [M10] Validate page param — default to 1 on invalid input
+        try:
+            page = max(1, int(request.query_params.get("page", 1)))
+        except (ValueError, TypeError):
+            page = 1
         page_size = 12
 
         try:
@@ -52,8 +69,7 @@ class ListingSearchView(APIView):
     def _elasticsearch_search(self, query, max_rent, rooms, has_balcony,
                                allows_pets, page, page_size):
         """Full-text search via Elasticsearch with aggregations."""
-        es_url = env_config("ELASTICSEARCH_URL", default="http://localhost:9200")
-        es = Elasticsearch([es_url])
+        es = _get_es_client()
 
         body = {"query": {"bool": {"must": [], "filter": []}}}
 
@@ -69,7 +85,6 @@ class ListingSearchView(APIView):
         else:
             body["query"]["bool"]["must"].append({"match_all": {}})
 
-        # Status filter — only active listings
         body["query"]["bool"]["filter"].append(
             {"term": {"status": "active"}}
         )
@@ -82,26 +97,27 @@ class ListingSearchView(APIView):
             body["query"]["bool"]["filter"].append(
                 {"term": {"rooms": int(rooms)}}
             )
+        # [C4] Use native booleans, not string "True"
         if has_balcony and has_balcony.lower() == "true":
             body["query"]["bool"]["filter"].append(
-                {"term": {"has_balcony": "True"}}
+                {"term": {"has_balcony": True}}
             )
         if allows_pets and allows_pets.lower() == "true":
             body["query"]["bool"]["filter"].append(
-                {"term": {"allows_pets": "True"}}
+                {"term": {"allows_pets": True}}
             )
 
-        # Aggregations for faceted search
         body["aggs"] = {
             "by_district": {"terms": {"field": "district.raw", "size": 15}},
             "rent_stats": {"stats": {"field": "rent_sek"}},
         }
 
         offset = (page - 1) * page_size
-        response = es.search(index="hyra_listings", body=body,
+        response = es.search(index=ES_INDEX, body=body,
                              from_=offset, size=page_size)
 
         hits = response["hits"]
+        total = hits["total"]["value"]
         results = [hit["_source"] for hit in hits["hits"]]
 
         facets = {}
@@ -114,8 +130,9 @@ class ListingSearchView(APIView):
             facets["rent_stats"] = aggs.get("rent_stats", {})
 
         return Response({
-            "count": hits["total"]["value"],
+            "count": total,
             "page": page,
+            "total_pages": (total + page_size - 1) // page_size,
             "results": results,
             "facets": facets,
             "engine": "elasticsearch",
@@ -154,18 +171,22 @@ class ListingSearchView(APIView):
         listings = qs[offset:offset + page_size]
         serializer = ListingListSerializer(listings, many=True)
 
-        # Build basic facets from Postgres
+        # [M9] Build facets consistent with ES response structure
         facets = {
             "by_district": list(
                 qs.values("district")
                 .annotate(count=Count("id"))
                 .order_by("-count")[:15]
             ),
+            "rent_stats": qs.aggregate(
+                min=Min("rent_sek"), max=Max("rent_sek"), avg=Avg("rent_sek"),
+            ),
         }
 
         return Response({
             "count": total,
             "page": page,
+            "total_pages": (total + page_size - 1) // page_size,
             "results": serializer.data,
             "facets": facets,
             "engine": "postgres_fallback",
@@ -179,8 +200,7 @@ class IndexListingsView(APIView):
     """
 
     def post(self, request):
-        es_url = env_config("ELASTICSEARCH_URL", default="http://localhost:9200")
-        es = Elasticsearch([es_url])
+        es = _get_es_client()
 
         listings = (
             Listing.objects
@@ -188,13 +208,12 @@ class IndexListingsView(APIView):
             .filter(status=Listing.Status.ACTIVE)
         )
 
-        # Build bulk actions
         from elasticsearch.helpers import bulk
 
         actions = []
         for listing in listings:
             actions.append({
-                "_index": "hyra_listings",
+                "_index": ES_INDEX,
                 "_id": listing.pk,
                 "_source": {
                     "title": listing.title,
@@ -210,9 +229,10 @@ class IndexListingsView(APIView):
                     "rooms": listing.rooms,
                     "size_sqm": listing.size_sqm,
                     "rent_sek": listing.rent_sek,
-                    "has_balcony": str(listing.has_balcony),
-                    "has_parking": str(listing.has_parking),
-                    "allows_pets": str(listing.allows_pets),
+                    # [C4] Index as native booleans, not strings
+                    "has_balcony": listing.has_balcony,
+                    "has_parking": listing.has_parking,
+                    "allows_pets": listing.allows_pets,
                     "landlord_name": listing.landlord.name,
                     "rent_value": float(listing.rent_sek),
                 },

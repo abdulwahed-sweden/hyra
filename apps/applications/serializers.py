@@ -4,8 +4,13 @@ from rest_framework import serializers
 from .models import Application
 
 
+# [M11] Explicit fields instead of __all__
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
-        fields = "__all__"
+        fields = [
+            "id", "listing", "applicant_name", "applicant_email",
+            "phone_number", "message", "monthly_income_sek",
+            "household_size", "status", "submitted_at", "updated_at",
+        ]
         read_only_fields = ["submitted_at", "updated_at"]
