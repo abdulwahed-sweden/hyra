@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyra — Bostadsplattform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #0057ff;
+            --accent-light: #e8efff;
+            --green: #00875a;
+            --green-light: #e3fcef;
+            --red: #de350b;
+            --red-light: #ffebe6;
+            --amber: #ff991f;
+            --amber-light: #fff7e6;
+            --blue: #0065ff;
+            --blue-light: #deebff;
+            --ink: #0f1923;
+            --ink-light: #42526e;
+            --surface: #f4f6f8;
+            --white: #ffffff;
+            --border: #dfe1e6;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(15,25,35,0.08), 0 1px 2px rgba(15,25,35,0.06);
+            --shadow-lg: 0 10px 30px rgba(15,25,35,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--surface);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 { font-family: 'DM Serif Display', serif; font-weight: 400; }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo { font-family: 'DM Serif Display', serif; font-size: 1.75rem; color: var(--accent); }
+        .tech-stack {
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            background: var(--surface);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+        .tab {
+            padding: 0.875rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--ink-light);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: var(--ink); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        /* Main content */
+        .main { max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.25rem;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: var(--shadow-lg); }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 1rem;
+        }
+
+        .card-title { font-size: 1.05rem; margin-bottom: 0.5rem; }
+        .card-meta { font-size: 0.82rem; color: var(--ink-light); margin-bottom: 0.75rem; }
+        .card-rent { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+        .card-details {
+            display: flex; gap: 0.75rem; flex-wrap: wrap;
+            margin-top: 0.5rem; font-size: 0.8rem; color: var(--ink-light);
+        }
+        .card-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-apartment { background: var(--blue-light); color: var(--blue); }
+        .badge-room { background: var(--amber-light); color: var(--amber); }
+        .badge-house { background: var(--green-light); color: var(--green); }
+
+        /* Pills for status */
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .pill-selected { background: var(--green-light); color: var(--green); }
+        .pill-qualified { background: var(--blue-light); color: var(--blue); }
+        .pill-disqualified { background: var(--red-light); color: var(--red); }
+        .pill-pending { background: var(--amber-light); color: var(--amber); }
+        .pill-rejected { background: var(--red-light); color: var(--red); }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex; gap: 0.75rem; flex-wrap: wrap;
+            margin-bottom: 1.5rem; align-items: center;
+        }
+        .filter-bar input, .filter-bar select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            background: var(--white);
+        }
+        .filter-bar input:focus, .filter-bar select:focus {
+            outline: none; border-color: var(--accent);
+        }
+        .search-input { flex: 1; min-width: 200px; }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: var(--white); }
+        .btn-primary:hover { background: #0046cc; }
+        .btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+
+        /* Stat cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.25rem; }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%; border-collapse: collapse;
+            background: var(--white); border-radius: var(--radius);
+            box-shadow: var(--shadow); overflow: hidden;
+        }
+        th, td { padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem; }
+        th { background: var(--surface); font-weight: 600; color: var(--ink-light); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+        tr:hover td { background: var(--surface); }
+
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface) 25%, #e8eaed 50%, var(--surface) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius);
+            height: 180px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* Toast */
+        .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1000; }
+        .toast {
+            background: var(--ink);
+            color: var(--white);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius);
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+        }
+        .toast-success { background: var(--green); }
+        .toast-error { background: var(--red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Pagination */
+        .pagination {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .pagination button {
+            padding: 0.4rem 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--white);
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+        }
+        .pagination button.active { background: var(--accent); color: var(--white); border-color: var(--accent); }
+        .pagination button:disabled { opacity: 0.4; cursor: default; }
+
+        /* Queue results */
+        .queue-form {
+            display: flex; gap: 0.75rem; align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .queue-form input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            width: 200px;
+        }
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* API table */
+        .api-method {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+        .method-get { background: var(--green-light); color: var(--green); }
+        .method-post { background: var(--blue-light); color: var(--blue); }
+
+        /* Facet pills */
+        .facets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+        .facet-pill {
+            padding: 0.3rem 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .facet-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Section titles */
+        .section-title { margin-bottom: 1rem; font-size: 1.5rem; }
+        .section-subtitle { color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1.5rem; font-family: 'DM Sans', sans-serif; }
+
+        @media (max-width: 768px) {
+            .header { padding: 0.75rem 1rem; }
+            .tabs { padding: 0 1rem; overflow-x: auto; }
+            .tab { padding: 0.75rem 1rem; white-space: nowrap; }
+            .main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <div class="logo">Hyra</div>
+        <span class="tech-stack">Django &middot; DRF &middot; PostgreSQL &middot; Elasticsearch</span>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="tab active" data-panel="listings">Bostäder</button>
+    <button class="tab" data-panel="queue">Kömotor</button>
+    <button class="tab" data-panel="search">Sök</button>
+    <button class="tab" data-panel="analytics">Analys</button>
+    <button class="tab" data-panel="api">API</button>
+</nav>
+
+<main class="main">
+
+    <!-- TAB 1: Listings -->
+    <div id="listings" class="panel active">
+        <h2 class="section-title">Lediga bostäder</h2>
+        <p class="section-subtitle">Bläddra bland aktiva bostadsannonser</p>
+
+        <div class="filter-bar">
+            <input type="text" class="search-input" id="listing-search" placeholder="Sök adress, område, titel...">
+            <input type="number" id="filter-min-rent" placeholder="Min hyra">
+            <input type="number" id="filter-max-rent" placeholder="Max hyra">
+            <select id="filter-rooms">
+                <option value="">Alla rum</option>
+                <option value="1">1 rum</option>
+                <option value="2">2 rum</option>
+                <option value="3">3 rum</option>
+                <option value="4">4 rum</option>
+                <option value="5">5+ rum</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadListings()">Filtrera</button>
+        </div>
+
+        <div id="listings-grid" class="card-grid">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
+
+        <div id="listings-pagination" class="pagination"></div>
+    </div>
+
+    <!-- TAB 2: Queue Engine -->
+    <div id="queue" class="panel">
+        <h2 class="section-title">Kömotor</h2>
+        <p class="section-subtitle">Kör köprocessen för en specifik bostad</p>
+
+        <div class="queue-form">
+            <input type="number" id="queue-listing-id" placeholder="Annons-ID (t.ex. 1)">
+            <button class="btn btn-primary" onclick="processQueue()">Bearbeta kö</button>
+            <button class="btn btn-secondary" onclick="loadLeaderboard()">Visa rankning</button>
+        </div>
+
+        <div id="queue-summary" class="result-summary" style="display:none;"></div>
+        <div id="queue-results" class="table-wrap"></div>
+    </div>
+
+    <!-- TAB 3: Search -->
+    <div id="search" class="panel">
+        <h2 class="section-title">Sök bostäder</h2>
+        <p class="section-subtitle">Fulltextsökning med Elasticsearch</p>
+
+        <div class="filter-bar">
+            <input type="text" class="search-input" id="es-query" placeholder="Sök t.ex. södermalm, vasastan, 3 rum...">
+            <input type="number" id="es-max-rent" placeholder="Max hyra">
+            <input type="number" id="es-rooms" placeholder="Rum">
+            <button class="btn btn-primary" onclick="runSearch()">Sök</button>
+        </div>
+
+        <div id="search-engine-badge" style="margin-bottom:1rem;"></div>
+        <div id="search-facets" class="facets"></div>
+        <div id="search-results" class="card-grid"></div>
+    </div>
+
+    <!-- TAB 4: Analytics -->
+    <div id="analytics" class="panel">
+        <h2 class="section-title">Analys</h2>
+        <p class="section-subtitle">Statistik och översikt</p>
+
+        <div id="analytics-stats" class="stat-grid">
+            <div class="skeleton" style="height:100px;"></div>
+            <div class="skeleton" style="height:100px;"></div>
+            <div class="skeleton" style="height:100px;"></div>
+            <div class="skeleton" style="height:100px;"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1rem;">
+            <div>
+                <h3 style="margin-bottom:0.75rem;">Populära områden</h3>
+                <div id="analytics-districts" class="table-wrap"></div>
+            </div>
+            <div>
+                <h3 style="margin-bottom:0.75rem;">Köstatus</h3>
+                <div id="analytics-queue" class="table-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: API -->
+    <div id="api" class="panel">
+        <h2 class="section-title">API-dokumentation</h2>
+        <p class="section-subtitle">Alla tillgängliga REST-endpoints</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Metod</th><th>Endpoint</th><th>Beskrivning</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/listings/">/api/listings/</a></td>
+                        <td>Lista alla aktiva bostäder (med filtrering, sökning, paginering)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/listings/stats/">/api/listings/stats/</a></td>
+                        <td>Aggregerad statistik för bostäder</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/listings/1/">/api/listings/{id}/</a></td>
+                        <td>Detaljer för en specifik bostad</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/listings/1/similar/">/api/listings/{id}/similar/</a></td>
+                        <td>Liknande bostäder (samma kommun och rum)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/queue/entries/">/api/queue/entries/</a></td>
+                        <td>Lista alla köplatser</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-post">POST</span></td>
+                        <td><a href="/api/queue/entries/process/">/api/queue/entries/process/</a></td>
+                        <td>Bearbeta kön för en bostad (skicka {"listing_id": N})</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/queue/entries/leaderboard/?listing=1">/api/queue/entries/leaderboard/?listing={id}</a></td>
+                        <td>Rankning för en specifik bostad</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/queue/entries/stats/">/api/queue/entries/stats/</a></td>
+                        <td>Köstatistik (genomsnittliga poäng, kreditbetyg)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/search/?q=södermalm">/api/search/?q={sökterm}</a></td>
+                        <td>Fulltextsökning (Elasticsearch med Postgres-fallback)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-post">POST</span></td>
+                        <td><a href="/api/search/index/">/api/search/index/</a></td>
+                        <td>Indexera alla bostäder i Elasticsearch</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-get">GET</span></td>
+                        <td><a href="/api/applications/">/api/applications/</a></td>
+                        <td>Lista alla ansökningar</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-method method-post">POST</span></td>
+                        <td><a href="/api/applications/">/api/applications/</a></td>
+                        <td>Skicka in en ny ansökan</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+    // --- Tab Navigation ---
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.panel).classList.add('active');
+
+            if (tab.dataset.panel === 'analytics') loadAnalytics();
+        });
+    });
+
+    // --- Toast ---
+    function showToast(message, type = '') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast' + (type ? ' toast-' + type : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // --- API Helper ---
+    async function api(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text);
+        }
+        return response.json();
+    }
+
+    // --- Listings ---
+    let currentPage = 1;
+
+    async function loadListings(page = 1) {
+        currentPage = page;
+        const grid = document.getElementById('listings-grid');
+        grid.innerHTML = Array(6).fill('<div class="skeleton"></div>').join('');
+
+        const params = new URLSearchParams();
+        params.set('page', page);
+
+        const search = document.getElementById('listing-search').value;
+        if (search) params.set('search', search);
+
+        const minRent = document.getElementById('filter-min-rent').value;
+        if (minRent) params.set('min_rent', minRent);
+
+        const maxRent = document.getElementById('filter-max-rent').value;
+        if (maxRent) params.set('max_rent', maxRent);
+
+        const rooms = document.getElementById('filter-rooms').value;
+        if (rooms) params.set('min_rooms', rooms);
+
+        try {
+            const data = await api('/api/listings/?' + params.toString());
+            const results = data.results || [];
+            const count = data.count || 0;
+
+            if (results.length === 0) {
+                grid.innerHTML = '<p style="color:var(--ink-light);padding:2rem;">Inga bostäder hittades.</p>';
+            } else {
+                grid.innerHTML = results.map(l => `
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.25rem;">
+                            <span class="card-badge badge-${l.listing_type}">${typeLabel(l.listing_type)}</span>
+                            <span style="font-size:0.78rem;color:var(--ink-light);">${l.applicant_count} sökande</span>
+                        </div>
+                        <h3 class="card-title">${l.title}</h3>
+                        <p class="card-meta">${l.street_address}, ${l.district}</p>
+                        <div class="card-rent">${l.rent_sek.toLocaleString('sv-SE')} kr/mån</div>
+                        <div class="card-details">
+                            <span>${l.rooms} rum</span>
+                            <span>${l.size_sqm} kvm</span>
+                            ${l.has_balcony ? '<span>Balkong</span>' : ''}
+                            ${l.allows_pets ? '<span>Husdjur</span>' : ''}
+                            ${l.has_elevator ? '<span>Hiss</span>' : ''}
+                            ${l.has_parking ? '<span>Parkering</span>' : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Pagination
+            const totalPages = Math.ceil(count / 12);
+            const pag = document.getElementById('listings-pagination');
+            if (totalPages > 1) {
+                let html = '';
+                html += `<button ${page <= 1 ? 'disabled' : ''} onclick="loadListings(${page - 1})">Föregående</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadListings(${i})">${i}</button>`;
+                }
+                html += `<button ${page >= totalPages ? 'disabled' : ''} onclick="loadListings(${page + 1})">Nästa</button>`;
+                pag.innerHTML = html;
+            } else {
+                pag.innerHTML = '';
+            }
+        } catch (err) {
+            grid.innerHTML = '<p style="color:var(--red);">Kunde inte ladda bostäder.</p>';
+            showToast('Fel vid laddning: ' + err.message, 'error');
+        }
+    }
+
+    function typeLabel(t) {
+        return { apartment: 'Lägenhet', room: 'Rum', house: 'Hus' }[t] || t;
+    }
+
+    // --- Queue Engine ---
+    async function processQueue() {
+        const listingId = document.getElementById('queue-listing-id').value;
+        if (!listingId) { showToast('Ange ett annons-ID', 'error'); return; }
+
+        try {
+            const result = await api('/api/queue/entries/process/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ listing_id: parseInt(listingId) }),
+            });
+
+            const summary = document.getElementById('queue-summary');
+            summary.style.display = 'grid';
+            summary.innerHTML = `
+                <div class="stat-card"><div class="stat-value">${result.total}</div><div class="stat-label">Totalt</div></div>
+                <div class="stat-card"><div class="stat-value">${result.qualified}</div><div class="stat-label">Kvalificerade</div></div>
+                <div class="stat-card"><div class="stat-value">${result.disqualified}</div><div class="stat-label">Diskvalificerade</div></div>
+                <div class="stat-card"><div class="stat-value" style="font-size:1rem;">${result.winner || '—'}</div><div class="stat-label">Vinnare</div></div>
+            `;
+
+            showToast(`Kö bearbetad! Typ: ${result.queue_type}, Vinnare: ${result.winner || 'ingen'}`, 'success');
+            loadLeaderboard();
+        } catch (err) {
+            showToast('Fel: ' + err.message, 'error');
+        }
+    }
+
+    async function loadLeaderboard() {
+        const listingId = document.getElementById('queue-listing-id').value;
+        if (!listingId) { showToast('Ange ett annons-ID', 'error'); return; }
+
+        try {
+            const data = await api(`/api/queue/entries/leaderboard/?listing=${listingId}`);
+            const entries = data.entries || [];
+
+            if (entries.length === 0) {
+                document.getElementById('queue-results').innerHTML = '<p style="color:var(--ink-light);padding:1rem;">Inga rankade sökande. Kör köprocessen först.</p>';
+                return;
+            }
+
+            document.getElementById('queue-results').innerHTML = `
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>Namn</th><th>Status</th><th>Köpoäng</th><th>Rankpoäng</th><th>Kreditbetyg</th><th>Inkomst</th></tr>
+                    </thead>
+                    <tbody>
+                        ${entries.map(e => `
+                            <tr>
+                                <td>${e.rank_position}</td>
+                                <td><strong>${e.applicant_name}</strong></td>
+                                <td><span class="pill pill-${e.status}">${statusLabel(e.status)}</span></td>
+                                <td>${e.queue_points}</td>
+                                <td>${e.rank_score ? e.rank_score.toFixed(1) : '—'}</td>
+                                <td>${e.credit_score}</td>
+                                <td>${e.monthly_income_sek.toLocaleString('sv-SE')} kr</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (err) {
+            showToast('Fel: ' + err.message, 'error');
+        }
+    }
+
+    function statusLabel(s) {
+        return {
+            selected: 'Utvald', qualified: 'Kvalificerad', disqualified: 'Diskvalificerad',
+            pending: 'Väntande', rejected: 'Avvisad', withdrawn: 'Återkallad',
+        }[s] || s;
+    }
+
+    // --- Search ---
+    async function runSearch() {
+        const query = document.getElementById('es-query').value;
+        const maxRent = document.getElementById('es-max-rent').value;
+        const rooms = document.getElementById('es-rooms').value;
+
+        const params = new URLSearchParams();
+        if (query) params.set('q', query);
+        if (maxRent) params.set('max_rent', maxRent);
+        if (rooms) params.set('rooms', rooms);
+
+        const resultsDiv = document.getElementById('search-results');
+        resultsDiv.innerHTML = Array(3).fill('<div class="skeleton"></div>').join('');
+
+        try {
+            const data = await api('/api/search/?' + params.toString());
+
+            // Engine badge
+            const badge = document.getElementById('search-engine-badge');
+            const isES = data.engine === 'elasticsearch';
+            badge.innerHTML = `<span class="pill ${isES ? 'pill-qualified' : 'pill-pending'}">${isES ? 'Elasticsearch' : 'PostgreSQL fallback'}</span> <span style="font-size:0.85rem;color:var(--ink-light);">${data.count} träffar</span>`;
+
+            // Facets
+            const facetsDiv = document.getElementById('search-facets');
+            const districts = data.facets?.by_district || [];
+            facetsDiv.innerHTML = districts.map(d => {
+                const name = d.district || d.key;
+                const count = d.count || d.doc_count;
+                return `<span class="facet-pill">${name} (${count})</span>`;
+            }).join('');
+
+            // Results
+            const results = data.results || [];
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p style="color:var(--ink-light);padding:2rem;">Inga resultat hittades.</p>';
+            } else {
+                resultsDiv.innerHTML = results.map(r => `
+                    <div class="card">
+                        <h3 class="card-title">${r.title}</h3>
+                        <p class="card-meta">${r.street_address || r.district || ''}, ${r.district || ''}</p>
+                        <div class="card-rent">${(r.rent_sek || 0).toLocaleString('sv-SE')} kr/mån</div>
+                        <div class="card-details">
+                            <span>${r.rooms} rum</span>
+                            <span>${r.size_sqm} kvm</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (err) {
+            resultsDiv.innerHTML = '<p style="color:var(--red);">Sökfel.</p>';
+            showToast('Sökfel: ' + err.message, 'error');
+        }
+    }
+
+    // --- Analytics ---
+    async function loadAnalytics() {
+        try {
+            const [listingStats, queueStats] = await Promise.all([
+                api('/api/listings/stats/'),
+                api('/api/queue/entries/stats/'),
+            ]);
+
+            // Stat cards
+            document.getElementById('analytics-stats').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${listingStats.total}</div><div class="stat-label">Aktiva bostäder</div></div>
+                <div class="stat-card"><div class="stat-value">${Math.round(listingStats.avg_rent || 0).toLocaleString('sv-SE')}</div><div class="stat-label">Snittshyra (kr)</div></div>
+                <div class="stat-card"><div class="stat-value">${queueStats.total}</div><div class="stat-label">Köplatser totalt</div></div>
+                <div class="stat-card"><div class="stat-value">${Math.round(queueStats.avg_points || 0)}</div><div class="stat-label">Snitt köpoäng</div></div>
+            `;
+
+            // Districts table
+            const districts = listingStats.by_district || [];
+            document.getElementById('analytics-districts').innerHTML = `
+                <table>
+                    <thead><tr><th>Område</th><th>Antal</th></tr></thead>
+                    <tbody>${districts.map(d => `<tr><td>${d.district}</td><td>${d.count}</td></tr>`).join('')}</tbody>
+                </table>
+            `;
+
+            // Queue status
+            const statuses = queueStats.by_status || [];
+            document.getElementById('analytics-queue').innerHTML = `
+                <table>
+                    <thead><tr><th>Status</th><th>Antal</th></tr></thead>
+                    <tbody>${statuses.map(s => `<tr><td><span class="pill pill-${s.status}">${statusLabel(s.status)}</span></td><td>${s.count}</td></tr>`).join('')}</tbody>
+                </table>
+            `;
+        } catch (err) {
+            showToast('Kunde inte ladda analys', 'error');
+        }
+    }
+
+    // --- Init ---
+    loadListings();
+</script>
+
+</body>
+</html>

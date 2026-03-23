@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    # Updated: DB name to hyra_demo, added -d flag to healthcheck, added restart policy
+    environment:
+      POSTGRES_DB: hyra_demo
+      POSTGRES_USER: hyra
+      POSTGRES_PASSWORD: hyra_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hyra -d hyra_demo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  elasticsearch:
+    image: elasticsearch:8.13.4
+    # Reduced heap from 512m to 256m — gentler on 2013 iMac hardware
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        python manage.py seed_demo --clear &&
+        python manage.py collectstatic --noinput &&
+        gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2
+      "
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=dev-only-insecure-key
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - DB_NAME=hyra_demo
+      - DB_USER=hyra
+      - DB_PASSWORD=hyra_pass
+      - DB_HOST=db
+      - DB_PORT=5432
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
