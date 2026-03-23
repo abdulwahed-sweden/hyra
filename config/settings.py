@@ -70,7 +70,7 @@ if config("DB_ENGINE", default="postgres") == "sqlite":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / config("DB_NAME", default="db.sqlite3"),
+            "NAME": config("DB_NAME", default=str(BASE_DIR / "db.sqlite3")),
         }
     }
 else:
@@ -104,7 +104,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
@@ -138,18 +138,16 @@ ELASTICSEARCH_DSL = {
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
 
-# Cache — Redis when available, otherwise in-memory (HF Spaces, local dev without Redis)
-try:
-    import redis as _redis_lib
-    _r = _redis_lib.from_url(config("REDIS_URL", default="redis://localhost:6379/0"))
-    _r.ping()
+# Cache — Redis when available, in-memory for HF Spaces / environments without Redis
+_cache_backend = config("CACHE_BACKEND", default="redis")
+if _cache_backend == "redis":
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": config("REDIS_URL", default="redis://localhost:6379/0"),
         }
     }
-except Exception:
+else:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
