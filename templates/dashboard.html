@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 /* ═══ DASHBOARD DESIGN SYSTEM ═══ */
-.page-shell { max-width: 1280px; margin: 0 auto; padding: var(--gutter); }
+.page-shell { padding-top: 28px; padding-bottom: 28px; }
 .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 0; margin-bottom: 2rem; overflow-x: auto; }
 .tab-btn { font-size: .95rem; font-weight: 500; color: var(--text-secondary); padding: 12px 18px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
 .tab-btn:hover { color: var(--text-secondary); }
@@ -92,8 +92,8 @@
 .info-box { background: var(--accent-subtle); border: 1px solid #c7d2fe; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 1.5rem; }
 .info-box p { font-size: .9rem; color: var(--text-secondary); margin: 0; line-height: 1.7; }
 .info-box strong { color: var(--text-primary); }
-.grid-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 1.75rem; }
-.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 1.75rem; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
 .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: .95rem; }
 .toast-float { position: fixed; bottom: 24px; right: 24px; z-index: 1090; padding: 14px 20px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 500; min-width: 320px; box-shadow: var(--shadow-lg); animation: panelIn .2s ease; }
@@ -107,7 +107,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-shell">
+<div class="container page-shell">
 
 <div class="tab-bar" role="tablist">
     <button class="tab-btn active" data-tab="p-list"><i class="bi bi-grid-3x3-gap"></i> Listings</button>
@@ -227,7 +227,7 @@ function sl(s){return{selected:'Selected',qualified:'Qualified',disqualified:'Di
 function setL(id,on){const b=document.getElementById(id);if(!b)return;b.disabled=on;if(on){b.dataset.h=b.innerHTML;b.innerHTML='<span class="spinner-border spinner-border-sm"></span>';}else{b.innerHTML=b.dataset.h||b.innerHTML;}}
 async function api(u,o={}){const r=await fetch(u,o);if(!r.ok){let m=`HTTP ${r.status}`;try{const j=await r.json();m=j.error||j.detail||JSON.stringify(j);}catch(e){}throw new Error(m);}return r.json();}
 function toast(msg,ok){const t=document.createElement('div');t.className='toast-float '+(ok?'toast-ok':'toast-err');t.innerHTML=`<i class="bi bi-${ok?'check-circle':'exclamation-triangle'} me-2"></i>${esc(msg)}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3500);}
-function pag(cid,total,ps,cur,fn){const tp=Math.ceil(total/ps),c=document.getElementById(cid);if(tp<=1){c.innerHTML='';return;}let h=`<button class="pag-btn" ${cur<=1?'disabled':''} onclick="${fn.name}(${cur-1})"><i class="bi bi-chevron-left"></i></button>`;const s=Math.max(1,cur-2),e=Math.min(tp,cur+2);if(s>1)h+=`<button class="pag-btn" onclick="${fn.name}(1)">1</button>`;if(s>2)h+='<button class="pag-btn" disabled>&hellip;</button>';for(let i=s;i<=e;i++)h+=`<button class="pag-btn ${i===cur?'active':''}" onclick="${fn.name}(${i})">${i}</button>`;if(e<tp-1)h+='<button class="pag-btn" disabled>&hellip;</button>';if(e<tp)h+=`<button class="pag-btn" onclick="${fn.name}(${tp})">${tp}</button>`;h+=`<button class="pag-btn" ${cur>=tp?'disabled':''} onclick="${fn.name}(${cur+1})"><i class="bi bi-chevron-right"></i></button>`;c.innerHTML=h;}
+function pag(cid,total,ps,cur,fn){const tp=Math.ceil(total/ps),c=document.getElementById(cid);if(tp<=1){c.innerHTML='';return;}let h=`<button class="pag-btn" ${cur<=1?'disabled':''} onclick="${fn.name}(${cur-1})"><i class="bi bi-chevron-left"></i></button>`;const s=Math.max(1,cur-2),e=Math.min(tp,cur+2);if(s>1)h+=`<button class="pag-btn" onclick="${fn.name}(1)">1</button>`;if(s>2)h+='<button class="pag-btn" disabled>...</button>';for(let i=s;i<=e;i++)h+=`<button class="pag-btn ${i===cur?'active':''}" onclick="${fn.name}(${i})">${i}</button>`;if(e<tp-1)h+='<button class="pag-btn" disabled>...</button>';if(e<tp)h+=`<button class="pag-btn" onclick="${fn.name}(${tp})">${tp}</button>`;h+=`<button class="pag-btn" ${cur>=tp?'disabled':''} onclick="${fn.name}(${cur+1})"><i class="bi bi-chevron-right"></i></button>`;c.innerHTML=h;}
 
 /* Tabs */
 document.querySelectorAll('.tab-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(btn.dataset.tab).classList.add('active');if(btn.dataset.tab==='p-stats')loadA();});});
