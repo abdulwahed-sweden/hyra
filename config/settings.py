@@ -45,6 +45,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Allow HF Spaces to embed in iframe
+X_FRAME_OPTIONS = "ALLOWALL"
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
