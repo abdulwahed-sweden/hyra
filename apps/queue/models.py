@@ -117,7 +117,10 @@ class QueueEngine:
 
     def __init__(self, listing):
         self.listing = listing
-        self.config = getattr(listing, "queue_config", None)
+        try:
+            self.config = listing.queue_config
+        except QueueConfig.DoesNotExist:
+            self.config = None
 
     def process(self) -> dict:
         """
@@ -174,7 +177,7 @@ class QueueEngine:
                         "status", "rank_score", "rank_position",
                     ])
 
-        return {
+        result = {
             "listing_id": self.listing.pk,
             "queue_type": self.config.queue_type,
             "total": len(entries),
@@ -183,6 +186,20 @@ class QueueEngine:
             "winner": winner,
             "winner_score": winner_score,
         }
+
+        # Emit webhook events to landlord systems after processing
+        try:
+            from apps.webhooks.models import emit_event
+            emit_event("queue.processed", self.listing.landlord_id, result)
+            if winner:
+                emit_event("tenant.selected", self.listing.landlord_id, {
+                    "listing_id": self.listing.pk,
+                    "tenant_name": winner,
+                })
+        except Exception:
+            pass  # Webhook delivery is best-effort, never blocks queue processing
+
+        return result
 
     def _check_eligibility(self, entry: QueueEntry) -> str:
         """

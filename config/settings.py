@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.queue",
     "apps.search",
     "apps.applications",
+    "apps.webhooks",
 ]
 
 MIDDLEWARE = [
@@ -125,6 +126,14 @@ ELASTICSEARCH_DSL = {
 # Celery
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
+
+# Cache — Redis for high-read endpoints (stats, points), falls back to local memory
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/0"),
+    }
+}
 
 # CORS — allow all in dev
 CORS_ALLOW_ALL_ORIGINS = DEBUG

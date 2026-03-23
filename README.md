@@ -1,119 +1,196 @@
-# Hyra — Rental Platform Demo
+# Hyra — Rental Queue Engine
 
-A production-quality rental marketplace API and dashboard built with Django, demonstrating senior-level backend engineering.
+A backend engineering demo built with HomeQ's stack: **Python 3.12 · Django 4.2 · PostgreSQL 16 · Elasticsearch 8 · Redis 7**.
 
-## English
+Demonstrates queue-based tenant selection with eligibility filtering, three ranking algorithms, webhook event delivery with retry logic, Redis caching, and Elasticsearch with automatic Postgres fallback. **59 tests passing.**
 
-### Stack
+---
 
-| Layer | Technology |
-|---|---|
-| Language | Python 3.12 |
-| Framework | Django 4.2, Django REST Framework |
-| Database | PostgreSQL 16 |
-| Search | Elasticsearch 8 |
-| Cache/Broker | Redis 7 |
-| Containerization | Docker & Docker Compose |
-
-### Quick Start
+## Quick Start
 
 ```bash
-# Clone and start all services
-git clone https://github.com/abdulwahed-sweden/hyra.git
-cd hyra
-docker compose up --build
+docker compose up --build          # http://localhost:8000
 ```
 
-The app starts at **http://localhost:8000** with 60 pre-seeded listings and queue entries.
+Or natively:
 
-### API Endpoints
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate && python manage.py seed_demo --clear
+python manage.py test              # 59 tests
+python manage.py runserver
+```
+
+---
+
+## Architecture
+
+```
+apps/
+├── queue/           Queue engine — eligibility, ranking, selection
+│   └── models.py    QueueEngine, QueueEntry, QueueConfig
+├── listings/        Landlord, Municipality, Listing models + filtered API
+├── search/          Elasticsearch with silent Postgres ILIKE fallback
+├── webhooks/        Event delivery to landlord systems with retry logic
+├── applications/    Tenant application submissions
+tests/
+├── test_queue_engine.py    27 tests — eligibility, ranking, edge cases
+├── test_api.py             22 tests — endpoints, validation, errors
+├── test_webhooks.py        10 tests — events, retry, HMAC, integration
+```
+
+---
+
+## Queue Engine
+
+**`apps/queue/models.py`** — The core. A pure Python class with explicit business logic.
+
+```python
+engine = QueueEngine(listing)
+result = engine.process()
+# {"qualified": 5, "disqualified": 3, "winner": "Erik Andersson", "queue_type": "points"}
+```
+
+### What `process()` does in one `transaction.atomic()` call:
+
+1. **Lock** — `select_for_update()` prevents concurrent processing of the same queue
+2. **Eligibility** — Six rules checked in priority order (debt → income → household → BankID → credit → points)
+3. **Rank** — Dispatch to points/first-come/lottery algorithm
+4. **Select** — Top-ranked applicant becomes winner, rest rejected
+5. **Notify** — Emit webhook events to landlord systems
+
+### Ranking Algorithms
+
+| Type | Logic | Real-world use |
+|------|-------|----------------|
+| `points` | Sorted by queue days, highest first | Traditional Swedish bostadskö — 1 point = 1 day |
+| `first_come` | Sorted by application timestamp | Fast-moving listings, 20%+ of HomeQ allocations |
+| `lottery` | `random.Random(listing.pk).shuffle()` — reproducible | Fair chance, auditable by re-running with same seed |
+
+### Eligibility Pipeline
+
+Each rule returns a specific disqualification reason. First failure wins — mirroring real property management requirements:
+
+1. **Kronofogden debt records** → automatic reject
+2. **Income < rent × multiplier** → "Insufficient income: 25,000 SEK < 30,000 SEK"
+3. **Household size > maximum** → "Household size 5 > max 4"
+4. **BankID not verified** (when required) → "BankID verification required"
+5. **Credit score below threshold** → "Credit score 45.0 < minimum 60.0"
+6. **Queue points below minimum** (when set) → "Queue points 200 < minimum 500"
+
+---
+
+## Webhook Events
+
+**`apps/webhooks/models.py`** — Event delivery system for landlord integrations.
+
+When a queue is processed, the platform notifies landlord systems via webhooks. This mirrors the integration pattern needed when 1000+ property companies depend on your platform.
+
+```python
+# Automatically emitted after queue processing:
+emit_event("queue.processed", landlord_id, {"listing_id": 1, "winner": "..."})
+emit_event("tenant.selected", landlord_id, {"listing_id": 1, "tenant_name": "..."})
+```
+
+**Retry with exponential backoff:** 5min → 15min → 1h → 6h → 24h → 48h → 7 days → exhausted.
+
+**HMAC-SHA256 signing:** Every payload is signed with the endpoint's secret so receivers can verify authenticity.
+
+**Best-effort delivery:** Webhook failures never block queue processing — the queue is the critical path.
+
+---
+
+## Caching Strategy
+
+**`apps/listings/views.py`** — Redis cache on the stats endpoint.
+
+The `/api/listings/stats/` endpoint is the highest-traffic read path (called by dashboard, landing page, analytics on every load). With 1.2M users, this query would hammer the database.
+
+```python
+# 60-second TTL — data changes infrequently, reads are constant
+cached = cache.get("listing_stats")
+if cached:
+    return Response(json.loads(cached))
+```
+
+Falls back gracefully if Redis is unavailable — cache is optional, never a single point of failure.
+
+---
+
+## Search with Fallback
+
+**`apps/search/views.py`** — Elasticsearch first, Postgres ILIKE on any failure.
+
+```
+GET /api/search/?q=södermalm&max_rent=12000&rooms=2
+→ {"engine": "elasticsearch", "count": 8, "facets": {...}}  # or
+→ {"engine": "postgres_fallback", "count": 8, "facets": {...}}
+```
+
+- Multi-match across title, description, district, municipality (weighted)
+- Fuzziness for Swedish typo handling
+- District facets + rent stats aggregations
+- Response always includes `engine` field so client knows which backend served results
+
+---
+
+## API
 
 | Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/listings/` | List active listings (filterable, searchable, paginated) |
-| GET | `/api/listings/stats/` | Aggregate listing statistics |
-| GET | `/api/listings/{id}/` | Listing detail |
-| GET | `/api/listings/{id}/similar/` | Similar listings (same municipality + rooms) |
-| POST | `/api/queue/entries/process/` | Run queue engine for a listing |
-| GET | `/api/queue/entries/leaderboard/?listing={id}` | Ranked queue entries |
-| GET | `/api/queue/entries/stats/` | Queue aggregate statistics |
-| GET | `/api/search/?q={term}` | Full-text search (ES + Postgres fallback) |
-| POST | `/api/search/index/` | Bulk index listings into Elasticsearch |
-| GET | `/api/applications/` | List applications |
-| POST | `/api/applications/` | Submit an application |
-
-### Architecture Decisions
-
-- **QueueEngine** — Pure Python class with explicit business logic. No signals or Django magic. Every step (eligibility, ranking, selection) is independently testable.
-- **select_for_update()** — Prevents race conditions during queue processing.
-- **transaction.atomic()** — Ensures the entire queue processing pipeline succeeds or rolls back.
-- **Reproducible lottery** — Seeded with listing PK so the same listing always produces the same lottery order (auditable).
-- **Elasticsearch fallback** — If ES is unavailable, search silently falls back to Postgres ILIKE queries. The response includes an `engine` field indicating which backend served the results.
-- **Denormalized applicant snapshots** — Queue entries store applicant data at application time, preventing data drift.
-
-### Dashboard
-
-Single-page vanilla JS dashboard with five tabs:
-
-1. **Bostäder** (Listings) — Card grid with search, filters, pagination
-2. **Kömotor** (Queue Engine) — Process a listing's queue and view ranked results
-3. **Sök** (Search) — Elasticsearch full-text search with facets
-4. **Analys** (Analytics) — Stats overview with district and queue breakdowns
-5. **API** — Interactive endpoint documentation
+|--------|----------|-------------|
+| `GET` | `/api/listings/` | Active listings — filterable, searchable, paginated |
+| `GET` | `/api/listings/{id}/` | Detail with nested landlord/municipality |
+| `GET` | `/api/listings/{id}/similar/` | Same municipality + rooms |
+| `GET` | `/api/listings/stats/` | Cached aggregates |
+| `POST` | `/api/queue/entries/process/` | Run queue engine |
+| `GET` | `/api/queue/entries/leaderboard/?listing=1` | Ranked results |
+| `GET` | `/api/search/?q=term` | Full-text search |
+| `GET` | `/health/` | Health check |
 
 ---
 
-## Svenska / Swedish
+## Tests — 59 passing
 
-### Snabbstart
+```
+tests/test_queue_engine.py     27 tests
+  EligibilityTests              10  — each rule independently, priority order, boundaries
+  PointsRankingTests             2  — highest wins, score normalization
+  FirstComeRankingTests          1  — earliest application wins
+  LotteryRankingTests            2  — reproducible, valid output
+  ProcessEdgeCaseTests           6  — empty queue, all disqualified, reprocessing, auto-config
 
-```bash
-git clone https://github.com/abdulwahed-sweden/hyra.git
-cd hyra
-docker compose up --build
+tests/test_api.py              22 tests
+  ListingAPITests               11  — CRUD, filtering, ordering, search, pagination, 404
+  QueueAPITests                  9  — process, leaderboard, validation, error codes
+  SearchAPITests                 7  — fallback, facets, page validation, engine field
+
+tests/test_webhooks.py         10 tests
+  WebhookModelTests              8  — emit, filter, HMAC, retry escalation, exhaustion
+  WebhookQueueIntegrationTests   2  — events emitted on process, works without endpoints
 ```
 
-Appen startar på **http://localhost:8000** med 60 förinspelade bostadsannonser.
+---
 
-### Teknikstack
+## Engineering Decisions
 
-| Lager | Teknik |
-|---|---|
-| Språk | Python 3.12 |
-| Ramverk | Django 4.2, Django REST Framework |
-| Databas | PostgreSQL 16 |
-| Sökning | Elasticsearch 8 |
-| Cache/Meddelandehanterare | Redis 7 |
-| Containerisering | Docker & Docker Compose |
-
-### API-endpoints
-
-| Metod | Endpoint | Beskrivning |
-|---|---|---|
-| GET | `/api/listings/` | Lista aktiva bostäder (filtrering, sökning, paginering) |
-| GET | `/api/listings/stats/` | Aggregerad statistik |
-| GET | `/api/listings/{id}/` | Bostadsdetaljer |
-| POST | `/api/queue/entries/process/` | Kör kömotorn för en bostad |
-| GET | `/api/queue/entries/leaderboard/?listing={id}` | Rankade köplatser |
-| GET | `/api/search/?q={term}` | Fulltextsökning (ES + Postgres-fallback) |
-| GET | `/api/applications/` | Lista ansökningar |
-
-### Arkitekturbeslut
-
-- **QueueEngine** — Ren Python-klass utan signaler eller magi. Varje steg är separat testbart.
-- **select_for_update()** — Förhindrar race conditions vid köbearbetning.
-- **Reproducerbar lottning** — Seedas med bostadens PK för reviderbarhet.
-- **Elasticsearch-fallback** — Sökningen faller tyst tillbaka till Postgres vid ES-avbrott.
+| Decision | Why |
+|----------|-----|
+| `select_for_update()` in `transaction.atomic()` | Prevents two requests from processing the same queue — critical when thousands hit a popular listing simultaneously |
+| Pure Python QueueEngine class | No signals, no model methods — every step independently testable and debuggable |
+| Webhook retry with exponential backoff | Landlord systems go down; 5min→7day schedule ensures delivery without overwhelming failed endpoints |
+| HMAC-SHA256 webhook signing | Receivers verify payload authenticity — essential when handling tenant selection events |
+| Redis cache on stats | Highest-read endpoint cached for 60s — prevents DB pressure from dashboard/analytics polling |
+| ES with silent Postgres fallback | Search always works; `engine` field gives transparency without exposing infrastructure failures to users |
+| Reproducible lottery seed | `random.Random(listing.pk)` — same listing always produces same order, so landlords can audit results |
+| Denormalized applicant snapshots | Queue entries freeze income/credit at application time — prevents data drift if profile changes after applying |
 
 ---
 
-## Om projektet / About
+## Stack
 
-**Hyra** (Swedish: "rent") is a senior backend engineering demo targeting the HomeQ Senior Backend Engineer opening in Stockholm.
+Python 3.12 · Django 4.2 LTS · Django REST Framework 3.15 · PostgreSQL 16 · Elasticsearch 8 · Redis 7 · Docker Compose
 
-Built with HomeQ's exact stack: Python, Django, PostgreSQL, Elasticsearch. The queue engine is the centerpiece — showing architectural thinking, explicit business logic, and production patterns.
+---
 
-**Författare / Author:** Abdulwahed Mansour
-**Plats / Location:** Norsborg, Stockholm, Sweden
-**Kontakt / Contact:** abdulwahed.mansour@gmail.com · +46 76 930 8145
-**GitHub:** github.com/abdulwahed-sweden
+Built by **Abdulwahed Mansour** · Stockholm · abdulwahed.mansour@gmail.com · [github.com/abdulwahed-sweden](https://github.com/abdulwahed-sweden)

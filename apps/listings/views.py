@@ -1,4 +1,8 @@
 """API views for listings — read-only viewset with stats and similar actions."""
+import json
+import logging
+
+from django.core.cache import cache
 from django.db.models import Avg, Count, Max, Min
 
 from rest_framework import viewsets
@@ -8,6 +12,11 @@ from rest_framework.response import Response
 from .filters import ListingFilter
 from .models import Listing
 from .serializers import ListingDetailSerializer, ListingListSerializer
+
+logger = logging.getLogger(__name__)
+
+# Cache TTL for stats — high-read endpoint, data changes infrequently
+STATS_CACHE_TTL = 60  # seconds
 
 
 class ListingViewSet(viewsets.ReadOnlyModelViewSet):
@@ -34,9 +43,18 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-        """Aggregate statistics across all active listings."""
-        # Use a clean queryset without the applicant_count annotation
-        # to avoid JOIN-inflated counts in values().annotate() calls
+        """
+        Aggregate statistics across all active listings.
+
+        Redis-cached for 60s — this is the highest-traffic endpoint
+        (called by dashboard, landing page, and analytics on every load).
+        In production with 1000+ landlords, this prevents DB pressure
+        on an endpoint whose data changes infrequently.
+        """
+        cached = cache.get("listing_stats")
+        if cached:
+            return Response(json.loads(cached))
+
         qs = Listing.objects.filter(status=Listing.Status.ACTIVE)
         agg = qs.aggregate(
             total=Count("id"),
@@ -58,11 +76,18 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
             .order_by("-count")[:10]
         )
 
-        return Response({
+        result = {
             **agg,
             "by_type": by_type,
             "by_district": by_district,
-        })
+        }
+
+        try:
+            cache.set("listing_stats", json.dumps(result), STATS_CACHE_TTL)
+        except Exception:
+            pass  # Cache is optional — degrade gracefully
+
+        return Response(result)
 
     @action(detail=True, methods=["get"])
     def similar(self, request, pk=None):

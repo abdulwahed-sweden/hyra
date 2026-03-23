@@ -1,581 +1,363 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyra — Bostadsplattform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --font-heading: 'Onest', sans-serif;
-            --font-default: 'IBM Plex Sans', sans-serif;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyra — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+    --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --blue:#394dff;--blue-h:#0015cc;--blue-l:#ebedff;--blue-50:#f5f6ff;
+    --text:#111;--text-2:#555;--text-3:#999;--border:#e5e5e5;--bg:#fafafa;
+    --white:#fff;--green:#059669;--green-bg:#ecfdf5;--green-fg:#065f46;
+    --red:#dc2626;--red-bg:#fef2f2;--red-fg:#991b1b;--amber:#d97706;--amber-bg:#fffbeb;--amber-fg:#92400e;
+    --r:10px;--shadow:0 1px 3px rgba(0,0,0,.05);--shadow-lg:0 8px 24px rgba(0,0,0,.08);
+}
+body{font:400 15px/1.6 var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;}
+a{color:var(--blue);text-decoration:none;}a:hover{color:var(--blue-h);}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
 
-            --color-primary-50:  #f5f6ff;
-            --color-primary-100: #ebedff;
-            --color-primary-200: #d1d6ff;
-            --color-primary-300: #5d6dff;
-            --color-primary-400: #394dff;
-            --color-primary-500: #0015cc;
-            --color-brand-blue:  #0f1339;
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;background:var(--white);border-bottom:1px solid var(--border);height:52px;padding:0 24px;}
+.nav-in{max-width:1200px;margin:0 auto;height:100%;display:flex;align-items:center;justify-content:space-between;}
+.logo{font:800 18px var(--font);color:var(--text);display:flex;align-items:center;gap:7px;text-decoration:none;letter-spacing:-.02em;}
+.logo i{width:26px;height:26px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font:700 13px var(--font);font-style:normal;}
+.back{font:500 13px var(--font);color:var(--text-3);text-decoration:none;padding:5px 10px;border-radius:6px;transition:.15s;}
+.back:hover{color:var(--blue);background:var(--blue-50);}
 
-            --color-grey-50:  #fafafa;
-            --color-grey-100: #f2f2f2;
-            --color-grey-200: #e7e7e7;
-            --color-grey-300: #c4c4c4;
-            --color-grey-400: #6e6e6e;
-            --color-grey-500: #454545;
+/* Tabs */
+.tabs{display:flex;gap:1px;padding:0 24px;background:var(--white);border-bottom:1px solid var(--border);max-width:1248px;margin:0 auto;}
+.tab{font:500 13px var(--font);padding:12px 16px;border:none;background:none;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;}
+.tab:hover{color:var(--text-2);}
+.tab[aria-selected="true"]{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
 
-            --color-success:     #10b981;
-            --color-success-bg:  #ecfdf5;
-            --color-success-fg:  #065f46;
-            --color-danger:      #ef4444;
-            --color-danger-bg:   #fef2f2;
-            --color-danger-fg:   #991b1b;
-            --color-warning:     #f59e0b;
-            --color-warning-bg:  #fffbeb;
-            --color-warning-fg:  #92400e;
+/* Layout */
+.main{max-width:1200px;margin:0 auto;padding:28px 24px;}
+.panel{display:none;}.panel.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
-            --color-text:        #1a1d23;
-            --color-text-sec:    #4b5563;
-            --color-text-mute:   #6b7280;
+/* Section */
+.sh{margin-bottom:24px;}.sh h2{font:700 22px/1.2 var(--font);letter-spacing:-.02em;margin-bottom:4px;}.sh p{font:400 14px var(--font);color:var(--text-3);}
 
-            --white: #ffffff;
-            --color-bg: #f8f9fb;
-            --color-dark: #111318;
-            --color-dark-sec: #1e2028;
+/* Buttons */
+.btn{font:600 13px/1 var(--font);padding:9px 16px;border-radius:8px;border:none;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-p{background:var(--blue);color:#fff;}.btn-p:hover{background:var(--blue-h);}
+.btn-p:disabled{background:#ccc;cursor:default;}
+.btn-g{background:var(--white);color:var(--text-2);border:1px solid var(--border);}.btn-g:hover{background:var(--bg);}
+.btn-r{background:var(--red-bg);color:var(--red);border:1px solid transparent;}.btn-r:hover{background:#fde8e8;}
+.btn-sm{padding:6px 10px;font-size:12px;}
 
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --radius-full: 9999px;
+/* Inputs */
+.inp{font:400 14px var(--font);padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);outline:none;transition:.15s;}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(57,77,255,.1);}
+.inp::placeholder{color:var(--text-3);}
+select.inp{cursor:pointer;}
 
-            --shadow-xs:   0 1px 2px rgba(0,0,0,0.04);
-            --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-            --shadow-md:   0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
-            --shadow-lg:   0 10px 30px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
-            --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+/* Search bar — prominent */
+.search-bar{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;box-shadow:var(--shadow);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.search-bar .inp-main{flex:1;min-width:220px;font-size:15px;padding:11px 14px;border:2px solid var(--border);border-radius:var(--r);}
+.search-bar .inp-main:focus{border-color:var(--blue);}
+.search-bar .inp{width:120px;}
 
-            --transition: 0.2s ease;
-            --focus-ring: 0 0 0 3px rgba(57,77,255,0.35);
-        }
+/* Stat row */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:12px;transition:.15s;}
+.stat:hover{box-shadow:var(--shadow);}
+.stat-ic{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.stat-ic-b{background:var(--blue-l);}.stat-ic-g{background:var(--green-bg);}.stat-ic-a{background:var(--amber-bg);}.stat-ic-p{background:#f3e8ff;}
+.stat-v{font:700 20px var(--font);color:var(--text);letter-spacing:-.02em;}.stat-l{font:500 11px var(--font);color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;}
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Card grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.lc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:.2s;cursor:pointer;}
+.lc:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.lc-img{height:150px;background:var(--bg);display:flex;align-items:center;justify-content:center;position:relative;}
+.lc-img svg{width:36px;height:36px;color:#ccc;}
+.lc-tag{position:absolute;top:8px;left:8px;font:600 10px var(--font);padding:3px 7px;border-radius:5px;background:var(--white);color:var(--text-2);box-shadow:var(--shadow);text-transform:uppercase;letter-spacing:.04em;}
+.lc-cnt{position:absolute;top:8px;right:8px;font:600 10px var(--font);padding:3px 7px;border-radius:5px;background:var(--blue-l);color:var(--blue);}
+.lc-b{padding:12px 14px;}
+.lc-d{font:600 10px var(--font);color:var(--blue);text-transform:uppercase;letter-spacing:.06em;}
+.lc-t{font:600 14px/1.3 var(--font);margin:3px 0 5px;color:var(--text);}
+.lc-sub{font:400 12px var(--font);color:var(--text-3);margin-bottom:8px;}
+.lc-rent{font:700 18px var(--font);color:var(--blue);letter-spacing:-.02em;margin-bottom:8px;}
+.lc-feat{display:flex;flex-wrap:wrap;gap:4px;}
 
-        body {
-            font: 400 16px/24px var(--font-default);
-            background: var(--color-bg);
-            color: var(--color-text);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+/* Badges */
+.badge{display:inline-block;font:500 11px var(--font);padding:3px 8px;border-radius:99px;letter-spacing:.01em;}
+.b-basic{background:var(--bg);color:var(--text-2);}.b-blue{background:var(--blue-l);color:var(--blue);}
+.b-green{background:var(--green-bg);color:var(--green-fg);}.b-red{background:var(--red-bg);color:var(--red-fg);}
+.b-amber{background:var(--amber-bg);color:var(--amber-fg);}
+.b-selected{background:var(--green-bg);color:var(--green-fg);}.b-qualified{background:var(--blue-l);color:var(--blue);}
+.b-disqualified{background:var(--red-bg);color:var(--red-fg);}.b-pending{background:var(--amber-bg);color:var(--amber-fg);}
+.b-rejected{background:var(--red-bg);color:var(--red-fg);}.b-withdrawn{background:var(--bg);color:var(--text-3);}
 
-        h1,h2,h3,h4,h5,h6,.font-heading {
-            font-family: var(--font-heading);
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            color: var(--color-text);
-        }
-        .font-default { font-family: var(--font-default); }
+/* Tables */
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--white);}
+table{width:100%;border-collapse:collapse;}
+th{font:600 11px var(--font);text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;text-align:left;background:var(--bg);border-bottom:1px solid var(--border);}
+td{padding:10px 16px;font:400 13px var(--font);border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--bg);}
+tr.win td{background:var(--green-bg);}
 
-        h1 { font: 700 48px/56px var(--font-heading); letter-spacing: -0.025em; }
-        h2 { font: 700 30px/38px var(--font-heading); letter-spacing: -0.025em; }
-        h3 { font: 700 24px/32px var(--font-heading); letter-spacing: -0.02em; }
+/* Pagination */
+.pag{display:flex;justify-content:center;gap:3px;margin-top:24px;}
+.pag button{font:500 12px var(--font);padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--white);color:var(--text-2);cursor:pointer;transition:.15s;}
+.pag button:hover:not(:disabled){background:var(--bg);}
+.pag button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.pag button:disabled{opacity:.3;cursor:default;pointer-events:none;}
 
-        input,select,button,label,td,th { font-family: var(--font-default); }
-        a { color: var(--color-primary-400); text-decoration: none; transition: color var(--transition); }
-        a:hover { color: var(--color-primary-500); }
-        :focus-visible { outline: 2px solid var(--color-primary-400); outline-offset: 2px; }
+/* Skeleton */
+.sk{background:linear-gradient(100deg,#eee 30%,#f5f5f5 50%,#eee 70%);background-size:400% 100%;animation:sk 1.4s ease infinite;border-radius:var(--r);height:260px;}
+@keyframes sk{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
-        /* ── White Navbar (matching landing page) ── */
-        .navbar {
-            background: var(--white);
-            border-bottom: 1px solid var(--color-grey-200);
-            padding: 0 32px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .navbar-left { display: flex; align-items: center; gap: 24px; }
-        .navbar-right { display: flex; align-items: center; gap: 8px; }
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-        .brand-icon {
-            width: 34px; height: 34px;
-            background: var(--color-primary-400);
-            border-radius: var(--radius-sm);
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font: 700 16px var(--font-heading);
-        }
-        .brand-text {
-            font: 700 22px/1 var(--font-heading);
-            color: var(--color-text);
-            letter-spacing: -0.02em;
-        }
-        .tech-pill {
-            font: 400 12px/16px var(--font-default);
-            color: var(--color-text-mute);
-            background: var(--color-grey-100);
-            padding: 4px 10px;
-            border-radius: var(--radius-full);
-        }
-        .back-link {
-            font: 500 13px/18px var(--font-default);
-            color: var(--color-text-mute);
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition);
-        }
-        .back-link:hover { color: var(--color-primary-400); background: var(--color-primary-50); }
+/* Queue */
+.q-form{display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.q-form .inp{width:200px;}
+.info{background:var(--blue-50);border:1px solid var(--blue-l);border-radius:var(--r);padding:14px 16px;margin-bottom:20px;font:400 13px/1.6 var(--font);color:var(--text-2);}
+.info b{color:var(--text);}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
 
-        /* ── Tabs ── */
-        .tabs-nav {
-            display: flex;
-            gap: 2px;
-            padding: 0 32px;
-            background: var(--white);
-            border-bottom: 1px solid var(--color-grey-200);
-        }
-        .tab-link {
-            font: 500 14px/20px var(--font-default);
-            padding: 14px 20px;
-            border: none;
-            background: none;
-            color: var(--color-text-mute);
-            cursor: pointer;
-            transition: all var(--transition);
-            border-bottom: 2px solid transparent;
-            position: relative;
-        }
-        .tab-link:hover { color: var(--color-text); }
-        .tab-link[aria-selected="true"] {
-            color: var(--color-primary-400);
-            border-bottom-color: var(--color-primary-400);
-            font-weight: 600;
-        }
+/* Facets */
+.facets{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0;}
+.facet{font:500 12px var(--font);padding:4px 10px;background:var(--blue-l);color:var(--blue);border-radius:99px;cursor:pointer;border:none;transition:.15s;}
+.facet:hover{background:var(--blue);color:#fff;}
 
-        /* ── Layout ── */
-        .main { max-width: 1320px; margin: 0 auto; padding: 32px; }
-        .panel { display: none; }
-        .panel.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Engine badge */
+.eng-b{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 
-        .section-header { margin-bottom: 28px; }
-        .section-title { font: 700 28px/36px var(--font-heading); letter-spacing: -0.025em; margin-bottom: 6px; }
-        .section-subtitle { font: 400 15px/22px var(--font-default); color: var(--color-text-mute); }
+/* API */
+.api-m{display:inline-block;font:600 10px var(--font);padding:3px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;}
+.m-get{background:var(--green-bg);color:var(--green-fg);}.m-post{background:var(--blue-l);color:var(--blue);}
 
-        /* ── Buttons ── */
-        .btn {
-            font: 600 15px/20px var(--font-default);
-            border-radius: var(--radius-sm);
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: var(--color-primary-400);
-            color: #fff;
-            box-shadow: 0 1px 2px rgba(57,77,255,0.3);
-        }
-        .btn-primary:hover { background: var(--color-primary-500); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(57,77,255,0.3); }
-        .btn-primary:active { transform: translateY(0); }
-        .btn-primary:disabled { background: var(--color-grey-300); box-shadow: none; cursor: default; transform: none; }
-        .btn-ghost {
-            background: var(--white);
-            color: var(--color-text-sec);
-            border: 1px solid var(--color-grey-200);
-        }
-        .btn-ghost:hover { background: var(--color-grey-50); border-color: var(--color-grey-300); }
-        .btn-sm { padding: 6px 12px; font-size: 13px; }
+/* Modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;animation:fadeIn .2s ease;}
+.modal{background:var(--white);border-radius:14px;max-width:640px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,.15);}
+.modal-h{display:flex;justify-content:space-between;align-items:start;padding:20px 20px 0;}
+.modal-h h3{font:700 18px var(--font);letter-spacing:-.01em;}
+.modal-x{background:var(--bg);border:none;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:16px;color:var(--text-3);display:flex;align-items:center;justify-content:center;transition:.15s;}
+.modal-x:hover{background:var(--border);color:var(--text);}
+.modal-b{padding:14px 20px 20px;}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.det-item label{display:block;font:500 10px var(--font);color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:1px;}
+.det-item span{font:400 14px var(--font);color:var(--text);}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.sim-card{border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:.15s;}
+.sim-card:hover{border-color:var(--blue);background:var(--blue-50);}
+.empty{font:400 14px var(--font);color:var(--text-3);padding:32px;text-align:center;}
+.err{color:var(--red);}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;}
 
-        /* ── Inputs ── */
-        .input {
-            background: var(--white);
-            border: 1px solid var(--color-grey-200);
-            border-radius: var(--radius-sm);
-            padding: 9px 14px;
-            font: 400 15px/22px var(--font-default);
-            color: var(--color-text);
-            transition: all 150ms ease;
-            outline: none;
-        }
-        .input:hover { border-color: var(--color-grey-300); }
-        .input:focus { border-color: var(--color-primary-400); box-shadow: 0 0 0 3px rgba(57,77,255,0.12); }
-        .input::placeholder { color: var(--color-text-mute); }
-        select.input { cursor: pointer; }
-
-        /* ── Filter bar ── */
-        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
-        .filter-bar .input-search { flex: 1; min-width: 220px; }
-
-        /* ── Stat Cards ── */
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card {
-            background: var(--white);
-            border: 1px solid var(--color-grey-200);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            transition: all var(--transition);
-            box-shadow: var(--shadow-xs);
-        }
-        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-        .stat-icon {
-            width: 44px; height: 44px;
-            border-radius: var(--radius-md);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; flex-shrink: 0;
-        }
-        .stat-icon-blue { background: var(--color-primary-100); color: var(--color-primary-400); }
-        .stat-icon-green { background: var(--color-success-bg); color: var(--color-success); }
-        .stat-icon-amber { background: var(--color-warning-bg); color: var(--color-warning); }
-        .stat-icon-purple { background: #f3e8ff; color: #7c3aed; }
-        .stat-label { font: 500 12px/16px var(--font-default); color: var(--color-text-mute); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
-        .stat-value { font: 700 24px/30px var(--font-heading); color: var(--color-text); letter-spacing: -0.02em; }
-        .stat-value-sm { font: 600 16px/22px var(--font-heading); color: var(--color-text); }
-
-        /* ── Cards ── */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 20px; }
-        .listing-card {
-            background: var(--white);
-            border: 1px solid var(--color-grey-200);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            box-shadow: var(--shadow-card);
-        }
-        .listing-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-        .listing-card-img {
-            height: 180px; background: linear-gradient(135deg, var(--color-primary-50), var(--color-grey-100));
-            display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
-        }
-        .listing-card-img svg { width: 56px; height: 56px; color: var(--color-grey-300); }
-        .listing-card-type { position: absolute; top: 12px; left: 12px; }
-        .listing-card-queue { position: absolute; top: 12px; right: 12px; }
-        .listing-card-body { padding: 16px; }
-        .listing-card-district { font: 600 11px/16px var(--font-default); color: var(--color-primary-400); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-        .listing-card-title { font: 600 16px/22px var(--font-heading); color: var(--color-text); margin-bottom: 4px; letter-spacing: -0.01em; }
-        .listing-card-landlord { font: 400 13px/18px var(--font-default); color: var(--color-text-mute); margin-bottom: 10px; }
-        .listing-card-rent { font: 700 22px/28px var(--font-heading); color: var(--color-primary-400); margin-bottom: 10px; letter-spacing: -0.02em; }
-        .listing-card-features { display: flex; flex-wrap: wrap; gap: 5px; }
-
-        /* ── Badges ── */
-        .badge { display: inline-flex; align-items: center; font: 500 12px/16px var(--font-default); padding: 3px 10px; border-radius: var(--radius-full); letter-spacing: 0.02em; }
-        .badge-success { background: var(--color-success-bg); color: var(--color-success-fg); }
-        .badge-danger  { background: var(--color-danger-bg); color: var(--color-danger-fg); }
-        .badge-warning { background: var(--color-warning-bg); color: var(--color-warning-fg); }
-        .badge-primary { background: var(--color-primary-100); color: var(--color-primary-400); }
-        .badge-basic   { background: var(--color-grey-100); color: var(--color-grey-500); }
-
-        /* Status-mapped */
-        .badge-selected     { background: var(--color-success-bg); color: var(--color-success-fg); }
-        .badge-qualified    { background: var(--color-primary-100); color: var(--color-primary-400); }
-        .badge-disqualified { background: var(--color-danger-bg); color: var(--color-danger-fg); }
-        .badge-pending      { background: var(--color-warning-bg); color: var(--color-warning-fg); }
-        .badge-rejected     { background: var(--color-danger-bg); color: var(--color-danger-fg); }
-        .badge-withdrawn    { background: var(--color-grey-100); color: var(--color-grey-500); }
-
-        /* ── Tables ── */
-        .table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--color-grey-200); }
-        table { width: 100%; border-collapse: collapse; background: var(--white); }
-        th { font: 600 12px/16px var(--font-default); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-mute); padding: 12px 20px; text-align: left; background: var(--color-grey-50); border-bottom: 1px solid var(--color-grey-200); }
-        td { padding: 14px 20px; font: 400 14px/20px var(--font-default); border-bottom: 1px solid var(--color-grey-200); }
-        tr:last-child td { border-bottom: none; }
-        tbody tr:hover td { background: var(--color-grey-50); }
-        tr.winner-row td { background: var(--color-success-bg); }
-
-        /* ── Skeleton ── */
-        .skeleton { background: linear-gradient(100deg, var(--color-grey-200) 30%, var(--color-grey-100) 50%, var(--color-grey-200) 70%); background-size: 400% 100%; animation: shimmer 1.6s ease infinite; border-radius: var(--radius-md); height: 300px; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* ── Toast ── */
-        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: var(--white); border: 1px solid var(--color-grey-200); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 14px 20px; min-width: 340px; font: 400 14px/20px var(--font-default); color: var(--color-text); animation: fadeInUp 0.3s ease; display: flex; align-items: center; gap: 10px; }
-        .toast-success { border-left: 4px solid var(--color-success); }
-        .toast-error   { border-left: 4px solid var(--color-danger); }
-        .toast-icon { font-size: 18px; flex-shrink: 0; }
-        @keyframes fadeInUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* ── Pagination ── */
-        .pagination { display: flex; justify-content: center; gap: 4px; margin-top: 28px; }
-        .pagination button { font: 500 13px/16px var(--font-default); padding: 8px 14px; border: 1px solid var(--color-grey-200); border-radius: var(--radius-sm); background: var(--white); color: var(--color-text-sec); cursor: pointer; transition: all var(--transition); }
-        .pagination button:hover:not(:disabled) { background: var(--color-grey-50); border-color: var(--color-grey-300); }
-        .pagination button.active { background: var(--color-primary-400); color: #fff; border-color: var(--color-primary-400); }
-        .pagination button:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
-
-        /* ── Queue form ── */
-        .queue-form { display: flex; gap: 8px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
-        .queue-form .input { width: 240px; }
-        .result-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-
-        /* ── Info box ── */
-        .info-box { background: var(--color-primary-50); border: 1px solid var(--color-primary-200); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start; }
-        .info-box-icon { font-size: 20px; color: var(--color-primary-400); flex-shrink: 0; margin-top: 2px; }
-        .info-box p { font: 400 14px/22px var(--font-default); color: var(--color-text-sec); }
-        .info-box strong { color: var(--color-text); }
-
-        /* ── API method badges ── */
-        .api-method { display: inline-block; font: 600 11px/16px var(--font-default); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-        .method-get  { color: var(--color-success-fg); background: var(--color-success-bg); }
-        .method-post { color: var(--color-primary-400); background: var(--color-primary-100); }
-
-        /* ── Facets ── */
-        .facets { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
-        .facet-pill { font: 500 12px/16px var(--font-default); padding: 5px 12px; background: var(--color-primary-100); color: var(--color-primary-400); border-radius: var(--radius-full); cursor: pointer; transition: all var(--transition); border: none; }
-        .facet-pill:hover { background: var(--color-primary-200); color: var(--color-primary-500); }
-
-        .engine-badge { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
-        .empty-state { font: 400 15px/22px var(--font-default); color: var(--color-text-mute); padding: 40px; text-align: center; }
-        .error-text { color: var(--color-danger); }
-
-        /* ── Modal ── */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(17,19,24,0.6); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
-        .modal { background: var(--white); border-radius: var(--radius-xl); max-width: 700px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.2); }
-        .modal-header { display: flex; justify-content: space-between; align-items: start; padding: 24px 24px 0; }
-        .modal-close { background: var(--color-grey-100); border: none; width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: var(--color-text-mute); transition: all var(--transition); }
-        .modal-close:hover { background: var(--color-grey-200); color: var(--color-text); }
-        .modal-body { padding: 16px 24px 24px; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
-        .detail-item label { font: 500 12px/16px var(--font-default); color: var(--color-text-mute); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 2px; }
-        .detail-item span { font: 400 15px/22px var(--font-default); color: var(--color-text); }
-        .similar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-        .similar-card { border: 1px solid var(--color-grey-200); border-radius: var(--radius-md); padding: 14px; cursor: pointer; transition: all var(--transition); }
-        .similar-card:hover { border-color: var(--color-primary-200); background: var(--color-primary-50); }
-
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-
-        @media (max-width: 1024px) { .two-col { grid-template-columns: 1fr; } }
-        @media (max-width: 768px) {
-            .navbar { padding: 0 16px; }
-            .tabs-nav { padding: 0 16px; overflow-x: auto; }
-            .tab-link { white-space: nowrap; padding: 12px 14px; }
-            .main { padding: 20px 16px; }
-            .detail-grid, .similar-grid { grid-template-columns: 1fr; }
-            .listing-card-img { height: 140px; }
-            .stat-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-        }
-    </style>
+@media(max-width:768px){.nav{padding:0 14px;}.main{padding:20px 14px;}.tabs{padding:0 14px;}.search-bar{padding:12px;}.cards{grid-template-columns:1fr;}.det-grid,.sim-grid,.two{grid-template-columns:1fr;}.lc-img{height:120px;}}
+</style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar">
-    <div class="navbar-left">
-        <a class="navbar-brand" href="/">
-            <span class="brand-icon">H</span>
-            <span class="brand-text">Hyra</span>
-        </a>
-        <span class="tech-pill">Django · DRF · PostgreSQL · Elasticsearch</span>
-    </div>
-    <div class="navbar-right">
-        <a class="back-link" href="/">← Startsidan</a>
-    </div>
-</nav>
+<nav class="nav"><div class="nav-in">
+    <a class="logo" href="/"><i>H</i>Hyra</a>
+    <a class="back" href="/">← Startsidan</a>
+</div></nav>
 
-<!-- Tabs -->
-<div class="tabs-nav" role="tablist" aria-label="Huvudnavigering">
-    <button class="tab-link" role="tab" aria-selected="true" aria-controls="listings" id="tab-listings">Bostäder</button>
-    <button class="tab-link" role="tab" aria-selected="false" aria-controls="queue" id="tab-queue">Kömotor</button>
-    <button class="tab-link" role="tab" aria-selected="false" aria-controls="search" id="tab-search">Sök</button>
-    <button class="tab-link" role="tab" aria-selected="false" aria-controls="analytics" id="tab-analytics">Analys</button>
-    <button class="tab-link" role="tab" aria-selected="false" aria-controls="api" id="tab-api">API</button>
+<div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="p-list" id="t-list">Bostäder</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-queue" id="t-queue">Kömotor</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-search" id="t-search">Sök</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-stats" id="t-stats">Analys</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-api" id="t-api">API</button>
 </div>
 
 <main class="main">
 
-    <!-- TAB 1: Listings -->
-    <div id="listings" class="panel active" role="tabpanel" aria-labelledby="tab-listings">
-        <div class="section-header">
-            <h2 class="section-title">Lediga bostäder</h2>
-            <p class="section-subtitle">Bläddra bland aktiva bostadsannonser i Stockholmsregionen</p>
-        </div>
-        <div id="listings-stats-bar" class="stat-grid"></div>
-        <div class="filter-bar">
-            <input type="text" class="input input-search" id="listing-search" placeholder="Sök adress, område, titel..." aria-label="Sök bostäder">
-            <input type="number" class="input" id="filter-min-rent" placeholder="Min hyra" style="width:130px;" aria-label="Minsta hyra">
-            <input type="number" class="input" id="filter-max-rent" placeholder="Max hyra" style="width:130px;" aria-label="Högsta hyra">
-            <select class="input" id="filter-rooms" style="width:140px;" aria-label="Antal rum">
-                <option value="">Alla rum</option>
-                <option value="1">1 rum</option><option value="2">2 rum</option><option value="3">3 rum</option><option value="4">4 rum</option><option value="5">5+ rum</option>
-            </select>
-            <button class="btn btn-primary" id="btn-filter" onclick="loadListings()">Filtrera</button>
-        </div>
-        <div id="listings-grid" class="card-grid"></div>
-        <div id="listings-pagination" class="pagination"></div>
+<!-- BOSTÄDER -->
+<div id="p-list" class="panel active" role="tabpanel">
+    <div class="sh"><h2>Lediga bostäder</h2><p>Aktiva hyresrätter i Stockholmsregionen</p></div>
+    <div id="st-bar" class="stat-row"></div>
+    <div class="search-bar">
+        <input type="text" class="inp inp-main" id="f-q" placeholder="Sök adress, område, titel..." aria-label="Sök">
+        <input type="number" class="inp" id="f-min" placeholder="Min hyra" aria-label="Min hyra">
+        <input type="number" class="inp" id="f-max" placeholder="Max hyra" aria-label="Max hyra">
+        <select class="inp" id="f-rooms" aria-label="Rum" style="width:110px;">
+            <option value="">Alla rum</option><option value="1">1 rum</option><option value="2">2 rum</option><option value="3">3 rum</option><option value="4">4 rum</option><option value="5">5+</option>
+        </select>
+        <button class="btn btn-p" id="btn-f" onclick="loadList()">Sök</button>
+        <button class="btn btn-r" id="btn-reset" onclick="resetFilters()">Återställ</button>
     </div>
+    <div id="list-grid" class="cards"></div>
+    <div id="list-pag" class="pag"></div>
+</div>
 
-    <!-- TAB 2: Queue -->
-    <div id="queue" class="panel" role="tabpanel" aria-labelledby="tab-queue">
-        <div class="section-header"><h2 class="section-title">Kömotor</h2><p class="section-subtitle">Bearbeta och ranka sökande i bostadskön</p></div>
-        <div class="info-box">
-            <span class="info-box-icon">⚡</span>
-            <p><strong>Hur kömotorn fungerar:</strong> Ange ett annons-ID för att bearbeta dess kö. Motorn kontrollerar behörighet (inkomst, skulder, BankID, kreditbetyg), rankar kvalificerade sökande efter kötyp (köpoäng, först-till-kvarn eller lottning), och väljer en vinnare — allt i en enda atomär transaktion.</p>
-        </div>
-        <div class="queue-form">
-            <input type="number" class="input" id="queue-listing-id" placeholder="Annons-ID (t.ex. 1)" min="1" aria-label="Annons-ID">
-            <button class="btn btn-primary" id="btn-process" onclick="processQueue()">Bearbeta kö</button>
-            <button class="btn btn-ghost" id="btn-leaderboard" onclick="loadLeaderboard()">Visa rankning</button>
-        </div>
-        <div id="queue-summary" class="result-summary" style="display:none;"></div>
-        <div id="queue-results" class="table-wrap" style="border:none;">
-            <p class="empty-state">Ange ett annons-ID ovan och klicka "Bearbeta kö" för att starta.</p>
-        </div>
+<!-- KÖMOTOR -->
+<div id="p-queue" class="panel" role="tabpanel">
+    <div class="sh"><h2>Kömotor</h2><p>Bearbeta och ranka sökande</p></div>
+    <div class="info"><b>Hur det fungerar:</b> Ange annons-ID → motorn kontrollerar behörighet → rankar kvalificerade → väljer vinnare. Allt i en atomär transaktion.</div>
+    <div class="q-form">
+        <input type="number" class="inp" id="q-id" placeholder="Annons-ID" min="1" aria-label="Annons-ID">
+        <button class="btn btn-p" id="btn-q" onclick="processQ()">Bearbeta kö</button>
+        <button class="btn btn-g" id="btn-lb" onclick="loadLB()">Visa rankning</button>
     </div>
+    <div id="q-sum" class="res-grid" style="display:none;"></div>
+    <div id="q-res"><p class="empty">Ange annons-ID och klicka "Bearbeta kö"</p></div>
+</div>
 
-    <!-- TAB 3: Search -->
-    <div id="search" class="panel" role="tabpanel" aria-labelledby="tab-search">
-        <div class="section-header"><h2 class="section-title">Sök bostäder</h2><p class="section-subtitle">Fulltextsökning med Elasticsearch (fallback till PostgreSQL)</p></div>
-        <div class="filter-bar">
-            <input type="text" class="input input-search" id="es-query" placeholder="Sök t.ex. norsborg, vasastan, 3 rum..." aria-label="Sökterm">
-            <input type="number" class="input" id="es-max-rent" placeholder="Max hyra" style="width:140px;" aria-label="Max hyra">
-            <input type="number" class="input" id="es-rooms" placeholder="Rum" style="width:100px;" aria-label="Antal rum">
-            <button class="btn btn-primary" id="btn-search" onclick="runSearch()">Sök</button>
-        </div>
-        <div id="search-engine-badge" class="engine-badge"></div>
-        <div id="search-facets" class="facets"></div>
-        <div id="search-results" class="card-grid"></div>
-        <div id="search-pagination" class="pagination"></div>
+<!-- SÖK -->
+<div id="p-search" class="panel" role="tabpanel">
+    <div class="sh"><h2>Sök bostäder</h2><p>Fulltextsökning (Elasticsearch → PostgreSQL fallback)</p></div>
+    <div class="search-bar">
+        <input type="text" class="inp inp-main" id="s-q" placeholder="Sök t.ex. Norsborg, Hallunda, 2 rum..." aria-label="Sökterm">
+        <input type="number" class="inp" id="s-rent" placeholder="Max hyra" aria-label="Max hyra">
+        <input type="number" class="inp" id="s-rooms" placeholder="Rum" aria-label="Rum" style="width:80px;">
+        <button class="btn btn-p" id="btn-s" onclick="doSearch()">Sök</button>
+        <button class="btn btn-r" onclick="document.getElementById('s-q').value='';document.getElementById('s-rent').value='';document.getElementById('s-rooms').value='';doSearch();">Återställ</button>
     </div>
+    <div id="s-eng" class="eng-b"></div>
+    <div id="s-facets" class="facets"></div>
+    <div id="s-res" class="cards"></div>
+    <div id="s-pag" class="pag"></div>
+</div>
 
-    <!-- TAB 4: Analytics -->
-    <div id="analytics" class="panel" role="tabpanel" aria-labelledby="tab-analytics">
-        <div class="section-header"><h2 class="section-title">Analys</h2><p class="section-subtitle">Statistik och översikt över plattformen</p></div>
-        <div id="analytics-stats" class="stat-grid">
-            <div class="skeleton" style="height:100px;"></div><div class="skeleton" style="height:100px;"></div><div class="skeleton" style="height:100px;"></div><div class="skeleton" style="height:100px;"></div>
-        </div>
-        <div class="two-col">
-            <div><h3 style="margin-bottom:14px;">Populära områden</h3><div id="analytics-districts" class="table-wrap"></div></div>
-            <div><h3 style="margin-bottom:14px;">Köstatus</h3><div id="analytics-queue" class="table-wrap"></div></div>
-        </div>
+<!-- ANALYS -->
+<div id="p-stats" class="panel" role="tabpanel">
+    <div class="sh"><h2>Analys</h2><p>Plattformsstatistik</p></div>
+    <div id="a-stats" class="stat-row"><div class="sk" style="height:80px;"></div><div class="sk" style="height:80px;"></div><div class="sk" style="height:80px;"></div><div class="sk" style="height:80px;"></div></div>
+    <div class="two">
+        <div><h3 style="font:700 16px var(--font);margin-bottom:10px;">Populära områden</h3><div id="a-dist" class="tw"></div></div>
+        <div><h3 style="font:700 16px var(--font);margin-bottom:10px;">Köstatus</h3><div id="a-queue" class="tw"></div></div>
     </div>
+</div>
 
-    <!-- TAB 5: API -->
-    <div id="api" class="panel" role="tabpanel" aria-labelledby="tab-api">
-        <div class="section-header"><h2 class="section-title">API-dokumentation</h2><p class="section-subtitle">Alla tillgängliga REST-endpoints</p></div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Metod</th><th>Endpoint</th><th>Beskrivning</th></tr></thead>
-                <tbody>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/listings/" target="_blank">/api/listings/</a></td><td>Lista aktiva bostäder (filtrering, sökning, paginering)</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/listings/stats/" target="_blank">/api/listings/stats/</a></td><td>Aggregerad statistik</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/listings/1/" target="_blank">/api/listings/{id}/</a></td><td>Bostadsdetaljer</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/listings/1/similar/" target="_blank">/api/listings/{id}/similar/</a></td><td>Liknande bostäder</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/queue/entries/" target="_blank">/api/queue/entries/</a></td><td>Lista köplatser</td></tr>
-                    <tr><td><span class="api-method method-post">POST</span></td><td><a href="/api/queue/entries/process/" target="_blank">/api/queue/entries/process/</a></td><td>Bearbeta kö ({"listing_id": N})</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/queue/entries/leaderboard/?listing=1" target="_blank">/api/queue/entries/leaderboard/</a></td><td>Rankning per bostad</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/queue/entries/stats/" target="_blank">/api/queue/entries/stats/</a></td><td>Köstatistik</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/search/?q=norsborg" target="_blank">/api/search/?q={term}</a></td><td>Fulltextsökning (ES + Postgres fallback)</td></tr>
-                    <tr><td><span class="api-method method-post">POST</span></td><td><a href="/api/search/index/" target="_blank">/api/search/index/</a></td><td>Indexera i Elasticsearch</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/api/applications/" target="_blank">/api/applications/</a></td><td>Lista ansökningar</td></tr>
-                    <tr><td><span class="api-method method-post">POST</span></td><td><a href="/api/applications/" target="_blank">/api/applications/</a></td><td>Skicka ansökan</td></tr>
-                    <tr><td><span class="api-method method-get">GET</span></td><td><a href="/health/" target="_blank">/health/</a></td><td>Health check</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<!-- API -->
+<div id="p-api" class="panel" role="tabpanel">
+    <div class="sh"><h2>API</h2><p>REST-endpoints</p></div>
+    <div class="tw"><table>
+        <thead><tr><th>Metod</th><th>Endpoint</th><th>Beskrivning</th></tr></thead>
+        <tbody>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/listings/" target="_blank">/api/listings/</a></td><td>Aktiva bostäder</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/listings/stats/" target="_blank">/api/listings/stats/</a></td><td>Statistik</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/listings/1/" target="_blank">/api/listings/{id}/</a></td><td>Detaljer</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/listings/1/similar/" target="_blank">/api/listings/{id}/similar/</a></td><td>Liknande</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/queue/entries/" target="_blank">/api/queue/entries/</a></td><td>Köplatser</td></tr>
+            <tr><td><span class="api-m m-post">POST</span></td><td><a href="/api/queue/entries/process/" target="_blank">/api/queue/entries/process/</a></td><td>Bearbeta kö</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/queue/entries/leaderboard/?listing=1" target="_blank">/api/queue/entries/leaderboard/</a></td><td>Rankning</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/queue/entries/stats/" target="_blank">/api/queue/entries/stats/</a></td><td>Köstatistik</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/search/?q=norsborg" target="_blank">/api/search/?q={term}</a></td><td>Sökning</td></tr>
+            <tr><td><span class="api-m m-post">POST</span></td><td><a href="/api/search/index/" target="_blank">/api/search/index/</a></td><td>Indexera ES</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/api/applications/" target="_blank">/api/applications/</a></td><td>Ansökningar</td></tr>
+            <tr><td><span class="api-m m-get">GET</span></td><td><a href="/health/" target="_blank">/health/</a></td><td>Health check</td></tr>
+        </tbody>
+    </table></div>
+</div>
+
 </main>
 
-<!-- Detail modal -->
-<div class="modal-overlay" id="detail-modal" role="dialog" aria-modal="true" aria-label="Bostadsdetaljer">
-    <div class="modal"><div class="modal-header"><h3 id="modal-title"></h3><button class="modal-close" onclick="closeModal()" aria-label="Stäng">&times;</button></div><div class="modal-body" id="modal-body"></div></div>
-</div>
-<div class="toast-container" id="toast-container"></div>
+<!-- Modal -->
+<div class="overlay" id="modal"><div class="modal"><div class="modal-h"><h3 id="m-title"></h3><button class="modal-x" onclick="closeM()">&times;</button></div><div class="modal-b" id="m-body"></div></div></div>
 
 <script>
 function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
-function typeLabel(t){return{apartment:'Lägenhet',room:'Rum',house:'Hus'}[t]||t;}
-function typeBadge(t){return{apartment:'badge-primary',room:'badge-warning',house:'badge-success'}[t]||'badge-basic';}
-function statusLabel(s){return{selected:'Utvald',qualified:'Kvalificerad',disqualified:'Diskvalificerad',pending:'Väntande',rejected:'Avvisad',withdrawn:'Återkallad'}[s]||s;}
-const bldgSvg='<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 2H9c-1.1 0-2 .9-2 2v5.6L3.1 12.5c-.1.1-.1.2-.1.3V21c0 .6.4 1 1 1h7v-4h2v4h7c.6 0 1-.4 1-1V4c0-1.1-.9-2-2-2zm-8 18H5v-7.2l3-2.3 3 2.3V20zm2-8h-2v-2h2v2zm0-4h-2V6h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/></svg>';
-
-function setLoading(id,on){const b=document.getElementById(id);if(!b)return;b.disabled=on;if(on){b.dataset.t=b.textContent;b.textContent='Laddar...';}else b.textContent=b.dataset.t||b.textContent;}
-
-function showToast(msg,type=''){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast'+(type?' toast-'+type:'');const icon=type==='success'?'✓':type==='error'?'✕':'ℹ';t.innerHTML=`<span class="toast-icon">${icon}</span><span>${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.remove(),4000);}
-
-async function api(url,opts={}){const r=await fetch(url,opts);if(!r.ok){let m=`HTTP ${r.status}`;try{const j=await r.json();m=j.error||j.detail||JSON.stringify(j);}catch(e){}throw new Error(m);}return r.json();}
+const S='<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 2H9c-1.1 0-2 .9-2 2v5.6L3.1 12.5c-.1.1-.1.2-.1.3V21c0 .6.4 1 1 1h7v-4h2v4h7c.6 0 1-.4 1-1V4c0-1.1-.9-2-2-2zm-8 18H5v-7.2l3-2.3 3 2.3V20zm2-8h-2v-2h2v2zm0-4h-2V6h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/></svg>';
+function tl(t){return{apartment:'Lägenhet',room:'Rum',house:'Hus'}[t]||t;}
+function sl(s){return{selected:'Utvald',qualified:'Kvalificerad',disqualified:'Diskvalificerad',pending:'Väntande',rejected:'Avvisad',withdrawn:'Återkallad'}[s]||s;}
+function setL(id,on){const b=document.getElementById(id);if(!b)return;b.disabled=on;if(on){b.dataset.t=b.textContent;b.textContent='...';}else b.textContent=b.dataset.t||b.textContent;}
+async function api(u,o={}){const r=await fetch(u,o);if(!r.ok){let m=`HTTP ${r.status}`;try{const j=await r.json();m=j.error||j.detail||JSON.stringify(j);}catch(e){}throw new Error(m);}return r.json();}
+function toast(msg,ok){const c=document.createElement('div');c.style.cssText=`position:fixed;bottom:20px;right:20px;z-index:999;background:var(--white);border:1px solid var(--border);border-left:4px solid ${ok?'var(--green)':'var(--red)'};border-radius:8px;padding:12px 18px;font:400 13px var(--font);color:var(--text);box-shadow:var(--shadow-lg);animation:fadeIn .2s ease;`;c.textContent=msg;document.body.appendChild(c);setTimeout(()=>c.remove(),3500);}
+function pag(cid,total,ps,cur,fn){const tp=Math.ceil(total/ps),p=document.getElementById(cid);if(tp<=1){p.innerHTML='';return;}let h=`<button ${cur<=1?'disabled':''} onclick="${fn.name}(${cur-1})">←</button>`;const s=Math.max(1,cur-2),e=Math.min(tp,cur+2);if(s>1)h+=`<button onclick="${fn.name}(1)">1</button>`;if(s>2)h+='<button disabled>…</button>';for(let i=s;i<=e;i++)h+=`<button class="${i===cur?'active':''}" onclick="${fn.name}(${i})">${i}</button>`;if(e<tp-1)h+='<button disabled>…</button>';if(e<tp)h+=`<button onclick="${fn.name}(${tp})">${tp}</button>`;h+=`<button ${cur>=tp?'disabled':''} onclick="${fn.name}(${cur+1})">→</button>`;p.innerHTML=h;}
 
 // Tabs
-document.querySelectorAll('.tab-link').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.tab-link').forEach(t=>t.setAttribute('aria-selected','false'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));tab.setAttribute('aria-selected','true');document.getElementById(tab.getAttribute('aria-controls')).classList.add('active');if(tab.getAttribute('aria-controls')==='analytics')loadAnalytics();});});
+document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));t.setAttribute('aria-selected','true');document.getElementById(t.getAttribute('aria-controls')).classList.add('active');if(t.getAttribute('aria-controls')==='p-stats')loadA();});});
 
-// Pagination renderer
-function renderPag(cid,total,ps,cur,fn){const tp=Math.ceil(total/ps),p=document.getElementById(cid);if(tp<=1){p.innerHTML='';return;}let h=`<button ${cur<=1?'disabled':''} onclick="${fn.name}(${cur-1})">← Föregående</button>`;const s=Math.max(1,cur-2),e=Math.min(tp,cur+2);if(s>1)h+=`<button onclick="${fn.name}(1)">1</button>`;if(s>2)h+='<button disabled>…</button>';for(let i=s;i<=e;i++)h+=`<button class="${i===cur?'active':''}" onclick="${fn.name}(${i})">${i}</button>`;if(e<tp-1)h+='<button disabled>…</button>';if(e<tp)h+=`<button onclick="${fn.name}(${tp})">${tp}</button>`;h+=`<button ${cur>=tp?'disabled':''} onclick="${fn.name}(${cur+1})">Nästa →</button>`;p.innerHTML=h;}
-
-let listCtrl=null,searchCtrl=null,statsLoaded=false,analyticsLoaded=false;
-
-// ══════ LISTINGS ══════
-async function loadListings(page=1){
-    const grid=document.getElementById('listings-grid');
-    grid.innerHTML=Array(6).fill('<div class="skeleton"></div>').join('');
-    setLoading('btn-filter',true);
-    if(listCtrl)listCtrl.abort();listCtrl=new AbortController();
-    const p=new URLSearchParams();p.set('page',page);
-    const sv=document.getElementById('listing-search').value;if(sv)p.set('search',sv);
-    const mn=document.getElementById('filter-min-rent').value;if(mn)p.set('min_rent',mn);
-    const mx=document.getElementById('filter-max-rent').value;if(mx)p.set('max_rent',mx);
-    const rm=document.getElementById('filter-rooms').value;if(rm)p.set('min_rooms',rm);
+// ═══ LISTINGS ═══
+let lCtrl=null,statsOk=false;
+function resetFilters(){document.getElementById('f-q').value='';document.getElementById('f-min').value='';document.getElementById('f-max').value='';document.getElementById('f-rooms').value='';loadList();}
+async function loadList(pg=1){
+    const g=document.getElementById('list-grid');g.innerHTML=Array(6).fill('<div class="sk"></div>').join('');
+    setL('btn-f',true);if(lCtrl)lCtrl.abort();lCtrl=new AbortController();
+    const p=new URLSearchParams();p.set('page',pg);
+    const q=document.getElementById('f-q').value;if(q)p.set('search',q);
+    const mn=document.getElementById('f-min').value;if(mn)p.set('min_rent',mn);
+    const mx=document.getElementById('f-max').value;if(mx)p.set('max_rent',mx);
+    const rm=document.getElementById('f-rooms').value;if(rm)p.set('min_rooms',rm);
     try{
-        const d=await api('/api/listings/?'+p.toString(),{signal:listCtrl.signal});
-        if(!statsLoaded){statsLoaded=true;try{const s=await api('/api/listings/stats/');document.getElementById('listings-stats-bar').innerHTML=`
-            <div class="stat-card"><div class="stat-icon stat-icon-blue">🏠</div><div><div class="stat-label">Aktiva bostäder</div><div class="stat-value">${s.total}</div></div></div>
-            <div class="stat-card"><div class="stat-icon stat-icon-green">💰</div><div><div class="stat-label">Snittshyra</div><div class="stat-value">${Math.round(s.avg_rent||0).toLocaleString('sv-SE')} kr</div></div></div>
-            <div class="stat-card"><div class="stat-icon stat-icon-amber">📉</div><div><div class="stat-label">Lägsta hyra</div><div class="stat-value">${s.min_rent?s.min_rent.toLocaleString('sv-SE'):'-'} kr</div></div></div>
-            <div class="stat-card"><div class="stat-icon stat-icon-purple">📐</div><div><div class="stat-label">Snittyta</div><div class="stat-value">${Math.round(s.avg_size||0)} kvm</div></div></div>`;}catch(e){}}
-        const res=d.results||[];
-        if(!res.length){grid.innerHTML='<div class="empty-state">Inga bostäder hittades.<br><button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="document.getElementById(\'listing-search\').value=\'\';document.getElementById(\'filter-min-rent\').value=\'\';document.getElementById(\'filter-max-rent\').value=\'\';document.getElementById(\'filter-rooms\').value=\'\';loadListings();">Återställ filter</button></div>';}
-        else{grid.innerHTML=res.map(l=>`<div class="listing-card" tabindex="0" onclick="openDetail(${l.id})" onkeydown="if(event.key==='Enter')openDetail(${l.id})">
-            <div class="listing-card-img">${bldgSvg}<span class="listing-card-type"><span class="badge ${typeBadge(l.listing_type)}">${esc(typeLabel(l.listing_type))}</span></span><span class="listing-card-queue"><span class="badge badge-primary">${l.applicant_count} sökande</span></span></div>
-            <div class="listing-card-body"><div class="listing-card-district">${esc(l.district)}</div><div class="listing-card-title">${esc(l.title)}</div><div class="listing-card-landlord">${esc(l.landlord_name)} · ${esc(l.street_address)}</div><div class="listing-card-rent">${l.rent_sek.toLocaleString('sv-SE')} kr/mån</div>
-            <div class="listing-card-features"><span class="badge badge-basic">${l.rooms} rum</span><span class="badge badge-basic">${l.size_sqm} kvm</span>${l.has_balcony?'<span class="badge badge-basic">Balkong</span>':''}${l.allows_pets?'<span class="badge badge-basic">Husdjur</span>':''}${l.has_elevator?'<span class="badge badge-basic">Hiss</span>':''}${l.has_parking?'<span class="badge badge-basic">Parkering</span>':''}</div></div></div>`).join('');}
-        renderPag('listings-pagination',d.count,12,page,loadListings);
-    }catch(e){if(e.name==='AbortError')return;grid.innerHTML='<div class="empty-state error-text">Kunde inte ladda bostäder.<br><button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="loadListings()">Försök igen</button></div>';showToast(e.message,'error');}
-    finally{setLoading('btn-filter',false);}
+        const d=await api('/api/listings/?'+p,{signal:lCtrl.signal});
+        if(!statsOk){statsOk=true;try{const s=await api('/api/listings/stats/');document.getElementById('st-bar').innerHTML=`
+            <div class="stat"><div class="stat-ic stat-ic-b">🏠</div><div><div class="stat-l">Bostäder</div><div class="stat-v">${s.total}</div></div></div>
+            <div class="stat"><div class="stat-ic stat-ic-g">💰</div><div><div class="stat-l">Snittshyra</div><div class="stat-v">${Math.round(s.avg_rent||0).toLocaleString('sv-SE')} kr</div></div></div>
+            <div class="stat"><div class="stat-ic stat-ic-a">📉</div><div><div class="stat-l">Lägsta</div><div class="stat-v">${(s.min_rent||0).toLocaleString('sv-SE')} kr</div></div></div>
+            <div class="stat"><div class="stat-ic stat-ic-p">📐</div><div><div class="stat-l">Snittyta</div><div class="stat-v">${Math.round(s.avg_size||0)} kvm</div></div></div>`;}catch(e){}}
+        const r=d.results||[];
+        if(!r.length){g.innerHTML='<p class="empty">Inga bostäder hittades</p>';}
+        else g.innerHTML=r.map(l=>`<div class="lc" tabindex="0" onclick="openM(${l.id})" onkeydown="if(event.key==='Enter')openM(${l.id})">
+            <div class="lc-img">${S}<span class="lc-tag">${esc(tl(l.listing_type))}</span><span class="lc-cnt">${l.applicant_count} i kö</span></div>
+            <div class="lc-b"><div class="lc-d">${esc(l.district)}</div><div class="lc-t">${esc(l.title)}</div><div class="lc-sub">${esc(l.landlord_name)} · ${esc(l.street_address)}</div><div class="lc-rent">${l.rent_sek.toLocaleString('sv-SE')} kr/mån</div>
+            <div class="lc-feat"><span class="badge b-basic">${l.rooms} rum</span><span class="badge b-basic">${l.size_sqm} kvm</span>${l.has_balcony?'<span class="badge b-basic">Balkong</span>':''}${l.allows_pets?'<span class="badge b-basic">Husdjur</span>':''}${l.has_elevator?'<span class="badge b-basic">Hiss</span>':''}${l.has_parking?'<span class="badge b-basic">P</span>':''}</div></div></div>`).join('');
+        pag('list-pag',d.count,12,pg,loadList);
+    }catch(e){if(e.name==='AbortError')return;g.innerHTML=`<p class="empty err">Fel. <button class="btn btn-g btn-sm" style="margin-top:8px;" onclick="loadList()">Försök igen</button></p>`;toast(e.message,false);}
+    finally{setL('btn-f',false);}
 }
 
-// Detail modal
-async function openDetail(id){const m=document.getElementById('detail-modal'),t=document.getElementById('modal-title'),b=document.getElementById('modal-body');t.textContent='Laddar...';b.innerHTML='<div class="skeleton" style="height:200px;"></div>';m.classList.add('active');try{const[d,sim]=await Promise.all([api(`/api/listings/${id}/`),api(`/api/listings/${id}/similar/`).catch(()=>[])]);t.textContent=d.title;b.innerHTML=`<div style="margin-bottom:14px;"><span class="badge ${typeBadge(d.listing_type)}">${esc(typeLabel(d.listing_type))}</span> <span class="badge badge-primary">${d.applicant_count} sökande</span></div><div style="font:700 28px/36px var(--font-heading);color:var(--color-primary-400);margin-bottom:8px;">${d.rent_sek.toLocaleString('sv-SE')} kr/mån</div><p style="color:var(--color-text-mute);margin-bottom:16px;">${esc(d.street_address)}, ${esc(d.district)} · ${esc(d.municipality?.name||'')}</p><div class="detail-grid"><div class="detail-item"><label>Rum</label><span>${d.rooms}</span></div><div class="detail-item"><label>Storlek</label><span>${d.size_sqm} kvm</span></div><div class="detail-item"><label>Våning</label><span>${d.floor} av ${d.total_floors}</span></div><div class="detail-item"><label>Tillgänglig</label><span>${esc(d.available_from)}</span></div><div class="detail-item"><label>Hyresvärd</label><span>${esc(d.landlord?.name||'')}</span></div><div class="detail-item"><label>Postnr</label><span>${esc(d.postal_code)}</span></div><div class="detail-item"><label>Inkomstkrav</label><span>${d.min_income_multiplier}x hyra</span></div><div class="detail-item"><label>Max hushåll</label><span>${d.max_household_size} pers</span></div></div><div style="display:flex;flex-wrap:wrap;gap:5px;margin:12px 0;">${d.has_elevator?'<span class="badge badge-basic">Hiss</span>':''}${d.has_balcony?'<span class="badge badge-basic">Balkong</span>':''}${d.has_parking?'<span class="badge badge-basic">Parkering</span>':''}${d.is_accessible?'<span class="badge badge-basic">Tillgänglig</span>':''}${d.allows_pets?'<span class="badge badge-basic">Husdjur OK</span>':''}</div>${d.description?`<p style="margin-top:16px;color:var(--color-text-sec);font:400 14px/22px var(--font-default);">${esc(d.description)}</p>`:''}${sim.length?`<h3 style="margin-top:24px;margin-bottom:10px;font:700 18px/24px var(--font-heading);">Liknande bostäder</h3><div class="similar-grid">${sim.map(s=>`<div class="similar-card" onclick="openDetail(${s.id})"><div style="font:600 11px/16px var(--font-default);color:var(--color-primary-400);text-transform:uppercase;letter-spacing:0.04em;">${esc(s.district)}</div><div style="font:600 15px/20px var(--font-heading);margin:4px 0;">${esc(s.title)}</div><div style="font:700 18px/24px var(--font-heading);color:var(--color-primary-400);">${s.rent_sek.toLocaleString('sv-SE')} kr/mån</div></div>`).join('')}</div>`:''}`;}catch(e){b.innerHTML='<p class="error-text">Kunde inte ladda detaljer.</p>';}}
-function closeModal(){document.getElementById('detail-modal').classList.remove('active');}
-document.getElementById('detail-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+// Modal
+async function openM(id){const m=document.getElementById('modal'),t=document.getElementById('m-title'),b=document.getElementById('m-body');t.textContent='Laddar...';b.innerHTML='<div class="sk" style="height:160px;"></div>';m.classList.add('open');
+try{const[d,sim]=await Promise.all([api(`/api/listings/${id}/`),api(`/api/listings/${id}/similar/`).catch(()=>[])]);t.textContent=d.title;
+b.innerHTML=`<div style="margin-bottom:10px;"><span class="badge b-blue">${esc(tl(d.listing_type))}</span> <span class="badge b-blue">${d.applicant_count} i kö</span></div>
+<div style="font:700 24px var(--font);color:var(--blue);margin-bottom:6px;">${d.rent_sek.toLocaleString('sv-SE')} kr/mån</div>
+<p style="font:400 13px var(--font);color:var(--text-3);margin-bottom:14px;">${esc(d.street_address)}, ${esc(d.district)} · ${esc(d.municipality?.name||'')}</p>
+<div class="det-grid"><div class="det-item"><label>Rum</label><span>${d.rooms}</span></div><div class="det-item"><label>Storlek</label><span>${d.size_sqm} kvm</span></div><div class="det-item"><label>Våning</label><span>${d.floor}/${d.total_floors}</span></div><div class="det-item"><label>Tillgänglig</label><span>${esc(d.available_from)}</span></div><div class="det-item"><label>Hyresvärd</label><span>${esc(d.landlord?.name||'')}</span></div><div class="det-item"><label>Inkomstkrav</label><span>${d.min_income_multiplier}x</span></div></div>
+<div style="display:flex;gap:4px;flex-wrap:wrap;margin:10px 0;">${d.has_elevator?'<span class="badge b-basic">Hiss</span>':''}${d.has_balcony?'<span class="badge b-basic">Balkong</span>':''}${d.has_parking?'<span class="badge b-basic">P</span>':''}${d.is_accessible?'<span class="badge b-basic">Tillgänglig</span>':''}${d.allows_pets?'<span class="badge b-basic">Husdjur</span>':''}</div>
+${d.description?`<p style="margin-top:12px;font:400 13px/1.6 var(--font);color:var(--text-2);">${esc(d.description)}</p>`:''}
+${sim.length?`<h4 style="font:700 14px var(--font);margin:18px 0 8px;">Liknande</h4><div class="sim-grid">${sim.map(s=>`<div class="sim-card" onclick="openM(${s.id})"><div style="font:600 9px var(--font);color:var(--blue);text-transform:uppercase;letter-spacing:.05em;">${esc(s.district)}</div><div style="font:600 13px var(--font);margin:2px 0;">${esc(s.title)}</div><div style="font:700 16px var(--font);color:var(--blue);">${s.rent_sek.toLocaleString('sv-SE')} kr</div></div>`).join('')}</div>`:''}`;}catch(e){b.innerHTML='<p class="err">Kunde inte ladda</p>';}}
+function closeM(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeM();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
 
-// ══════ QUEUE ══════
-async function processQueue(){const v=document.getElementById('queue-listing-id').value;if(!v||parseInt(v)<1){showToast('Ange ett giltigt annons-ID','error');return;}setLoading('btn-process',true);try{const r=await api('/api/queue/entries/process/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:parseInt(v)})});const s=document.getElementById('queue-summary');s.style.display='grid';if(r.total===0){s.innerHTML=`<div class="stat-card" style="grid-column:1/-1;"><div class="stat-icon stat-icon-amber">ℹ</div><div><div class="stat-label">Redan bearbetad</div><div class="stat-value-sm">Alla sökande i kö ${esc(v)} har redan bearbetats.</div></div></div>`;}else{s.innerHTML=`<div class="stat-card"><div class="stat-icon stat-icon-blue">Σ</div><div><div class="stat-label">Totalt</div><div class="stat-value">${r.total}</div></div></div><div class="stat-card"><div class="stat-icon stat-icon-green">✓</div><div><div class="stat-label">Kvalificerade</div><div class="stat-value">${r.qualified}</div></div></div><div class="stat-card"><div class="stat-icon" style="background:var(--color-danger-bg);color:var(--color-danger);">✕</div><div><div class="stat-label">Diskvalificerade</div><div class="stat-value">${r.disqualified}</div></div></div><div class="stat-card"><div class="stat-icon stat-icon-purple">★</div><div><div class="stat-label">Vinnare (${esc(r.queue_type)})</div><div class="stat-value-sm">${esc(r.winner)||'—'}</div></div></div>`;}showToast(`Kö bearbetad! Vinnare: ${r.winner||'ingen'}`,'success');loadLeaderboard();}catch(e){showToast(e.message,'error');}finally{setLoading('btn-process',false);}}
+// ═══ QUEUE ═══
+async function processQ(){const v=document.getElementById('q-id').value;if(!v||+v<1){toast('Ange giltigt annons-ID',false);return;}setL('btn-q',true);
+try{const r=await api('/api/queue/entries/process/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:+v})});
+const s=document.getElementById('q-sum');s.style.display='grid';
+if(r.total===0){s.innerHTML=`<div class="stat" style="grid-column:1/-1;"><div class="stat-ic stat-ic-a">ℹ</div><div><div class="stat-l">Redan bearbetad</div><div class="stat-v" style="font-size:14px;">Alla sökande redan bearbetade</div></div></div>`;}
+else{s.innerHTML=`<div class="stat"><div class="stat-ic stat-ic-b">Σ</div><div><div class="stat-l">Totalt</div><div class="stat-v">${r.total}</div></div></div><div class="stat"><div class="stat-ic stat-ic-g">✓</div><div><div class="stat-l">Kvalificerade</div><div class="stat-v">${r.qualified}</div></div></div><div class="stat"><div class="stat-ic" style="background:var(--red-bg);">✕</div><div><div class="stat-l">Diskvalificerade</div><div class="stat-v">${r.disqualified}</div></div></div><div class="stat"><div class="stat-ic stat-ic-p">★</div><div><div class="stat-l">Vinnare</div><div class="stat-v" style="font-size:13px;">${esc(r.winner)||'—'}</div></div></div>`;}
+toast(`Kö bearbetad! Vinnare: ${r.winner||'ingen'}`,true);loadLB();}catch(e){toast(e.message,false);}finally{setL('btn-q',false);}}
 
-async function loadLeaderboard(){const v=document.getElementById('queue-listing-id').value;if(!v||parseInt(v)<1){showToast('Ange ett giltigt annons-ID','error');return;}setLoading('btn-leaderboard',true);try{const d=await api(`/api/queue/entries/leaderboard/?listing=${v}`);const e=d.entries||[];if(!e.length){document.getElementById('queue-results').innerHTML='<p class="empty-state">Inga rankade sökande. Kör köprocessen först.</p>';return;}document.getElementById('queue-results').innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Namn</th><th>Status</th><th>Köpoäng</th><th>Rankpoäng</th><th>Kreditbetyg</th><th>Inkomst</th></tr></thead><tbody>${e.map(x=>`<tr class="${x.status==='selected'?'winner-row':''}"><td>${x.rank_position}</td><td><strong>${esc(x.applicant_name)}</strong>${x.status==='selected'?' ★':''}</td><td><span class="badge badge-${x.status}">${esc(statusLabel(x.status))}</span></td><td>${x.queue_points}</td><td>${x.rank_score?x.rank_score.toFixed(1):'—'}</td><td>${x.credit_score}</td><td>${x.monthly_income_sek.toLocaleString('sv-SE')} kr</td></tr>`).join('')}</tbody></table></div>`;}catch(e){showToast(e.message,'error');}finally{setLoading('btn-leaderboard',false);}}
+async function loadLB(){const v=document.getElementById('q-id').value;if(!v||+v<1){toast('Ange giltigt ID',false);return;}setL('btn-lb',true);
+try{const d=await api(`/api/queue/entries/leaderboard/?listing=${v}`);const e=d.entries||[];
+if(!e.length){document.getElementById('q-res').innerHTML='<p class="empty">Inga rankade. Kör kömotorn först.</p>';return;}
+document.getElementById('q-res').innerHTML=`<div class="tw"><table><thead><tr><th>#</th><th>Namn</th><th>Status</th><th>Poäng</th><th>Rank</th><th>Kredit</th><th>Inkomst</th></tr></thead><tbody>${e.map(x=>`<tr class="${x.status==='selected'?'win':''}"><td>${x.rank_position}</td><td><b>${esc(x.applicant_name)}</b>${x.status==='selected'?' ★':''}</td><td><span class="badge b-${x.status}">${esc(sl(x.status))}</span></td><td>${x.queue_points}</td><td>${x.rank_score?x.rank_score.toFixed(1):'—'}</td><td>${x.credit_score}</td><td>${x.monthly_income_sek.toLocaleString('sv-SE')} kr</td></tr>`).join('')}</tbody></table></div>`;}catch(e){toast(e.message,false);}finally{setL('btn-lb',false);}}
 
-// ══════ SEARCH ══════
-async function runSearch(page=1){const q=document.getElementById('es-query').value,mr=document.getElementById('es-max-rent').value,rm=document.getElementById('es-rooms').value;const p=new URLSearchParams();if(q)p.set('q',q);if(mr)p.set('max_rent',mr);if(rm)p.set('rooms',rm);p.set('page',page);const rd=document.getElementById('search-results');rd.innerHTML=Array(3).fill('<div class="skeleton"></div>').join('');setLoading('btn-search',true);if(searchCtrl)searchCtrl.abort();searchCtrl=new AbortController();try{const d=await api('/api/search/?'+p.toString(),{signal:searchCtrl.signal});const isES=d.engine==='elasticsearch';document.getElementById('search-engine-badge').innerHTML=`<span class="badge ${isES?'badge-success':'badge-warning'}">${isES?'Elasticsearch':'PostgreSQL fallback'}</span><span style="font:400 13px/18px var(--font-default);color:var(--color-text-mute);">${d.count} träffar</span>`;const dist=d.facets?.by_district||[];document.getElementById('search-facets').innerHTML=dist.map(x=>{const n=x.district||x.key,c=x.count||x.doc_count;return`<button class="facet-pill" onclick="document.getElementById('es-query').value='${esc(n)}';runSearch();">${esc(n)} (${c})</button>`;}).join('');const res=d.results||[];if(!res.length)rd.innerHTML='<p class="empty-state">Inga resultat hittades.</p>';else rd.innerHTML=res.map(r=>`<div class="listing-card" ${r.id?`onclick="openDetail(${r.id})" tabindex="0" onkeydown="if(event.key==='Enter')openDetail(${r.id})"`:''} ><div class="listing-card-img">${bldgSvg}</div><div class="listing-card-body"><div class="listing-card-district">${esc(r.district||'')}</div><div class="listing-card-title">${esc(r.title)}</div><div class="listing-card-landlord">${esc(r.street_address||r.landlord_name||'')}</div><div class="listing-card-rent">${(r.rent_sek||0).toLocaleString('sv-SE')} kr/mån</div><div class="listing-card-features"><span class="badge badge-basic">${r.rooms} rum</span><span class="badge badge-basic">${r.size_sqm} kvm</span></div></div></div>`).join('');renderPag('search-pagination',d.count,12,page,runSearch);}catch(e){if(e.name==='AbortError')return;rd.innerHTML='<div class="empty-state error-text">Sökfel.<br><button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="runSearch()">Försök igen</button></div>';showToast(e.message,'error');}finally{setLoading('btn-search',false);}}
+// ═══ SEARCH ═══
+let sCtrl=null;
+async function doSearch(pg=1){const q=document.getElementById('s-q').value,mr=document.getElementById('s-rent').value,rm=document.getElementById('s-rooms').value;
+const p=new URLSearchParams();if(q)p.set('q',q);if(mr)p.set('max_rent',mr);if(rm)p.set('rooms',rm);p.set('page',pg);
+const rd=document.getElementById('s-res');rd.innerHTML=Array(3).fill('<div class="sk"></div>').join('');setL('btn-s',true);if(sCtrl)sCtrl.abort();sCtrl=new AbortController();
+try{const d=await api('/api/search/?'+p,{signal:sCtrl.signal});
+const isES=d.engine==='elasticsearch';
+document.getElementById('s-eng').innerHTML=`<span class="badge ${isES?'b-green':'b-amber'}">${isES?'Elasticsearch':'PostgreSQL fallback'}</span><span style="font:400 12px var(--font);color:var(--text-3);">${d.count} träffar</span>`;
+const dist=d.facets?.by_district||[];
+document.getElementById('s-facets').innerHTML=dist.map(x=>{const n=x.district||x.key,c=x.count||x.doc_count;return`<button class="facet" onclick="document.getElementById('s-q').value='${esc(n)}';doSearch();">${esc(n)} (${c})</button>`;}).join('');
+const r=d.results||[];
+if(!r.length)rd.innerHTML='<p class="empty">Inga resultat</p>';
+else rd.innerHTML=r.map(x=>`<div class="lc" ${x.id?`onclick="openM(${x.id})" tabindex="0" onkeydown="if(event.key==='Enter')openM(${x.id})"`:''}>
+    <div class="lc-img">${S}</div><div class="lc-b"><div class="lc-d">${esc(x.district||'')}</div><div class="lc-t">${esc(x.title)}</div><div class="lc-sub">${esc(x.street_address||x.landlord_name||'')}</div><div class="lc-rent">${(x.rent_sek||0).toLocaleString('sv-SE')} kr/mån</div><div class="lc-feat"><span class="badge b-basic">${x.rooms} rum</span><span class="badge b-basic">${x.size_sqm} kvm</span></div></div></div>`).join('');
+pag('s-pag',d.count,12,pg,doSearch);}catch(e){if(e.name==='AbortError')return;rd.innerHTML=`<p class="empty err">Sökfel <button class="btn btn-g btn-sm" style="margin-top:8px;" onclick="doSearch()">Igen</button></p>`;toast(e.message,false);}finally{setL('btn-s',false);}}
 
-// ══════ ANALYTICS ══════
-async function loadAnalytics(){if(analyticsLoaded)return;try{const[ls,qs]=await Promise.all([api('/api/listings/stats/'),api('/api/queue/entries/stats/')]);document.getElementById('analytics-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon stat-icon-blue">🏠</div><div><div class="stat-label">Aktiva bostäder</div><div class="stat-value">${ls.total}</div></div></div>
-    <div class="stat-card"><div class="stat-icon stat-icon-green">💰</div><div><div class="stat-label">Snittshyra</div><div class="stat-value">${Math.round(ls.avg_rent||0).toLocaleString('sv-SE')} kr</div></div></div>
-    <div class="stat-card"><div class="stat-icon stat-icon-purple">👥</div><div><div class="stat-label">Köplatser totalt</div><div class="stat-value">${qs.total}</div></div></div>
-    <div class="stat-card"><div class="stat-icon stat-icon-amber">⭐</div><div><div class="stat-label">Snitt köpoäng</div><div class="stat-value">${Math.round(qs.avg_points||0)}</div></div></div>`;
-document.getElementById('analytics-districts').innerHTML=`<table><thead><tr><th>Område</th><th>Antal</th></tr></thead><tbody>${(ls.by_district||[]).map(d=>`<tr><td>${esc(d.district)}</td><td>${d.count}</td></tr>`).join('')}</tbody></table>`;
-document.getElementById('analytics-queue').innerHTML=`<table><thead><tr><th>Status</th><th>Antal</th></tr></thead><tbody>${(qs.by_status||[]).map(s=>`<tr><td><span class="badge badge-${s.status}">${esc(statusLabel(s.status))}</span></td><td>${s.count}</td></tr>`).join('')}</tbody></table>`;
-analyticsLoaded=true;}catch(e){document.getElementById('analytics-stats').innerHTML='<div class="empty-state error-text" style="grid-column:1/-1;">Kunde inte ladda analys.<br><button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="analyticsLoaded=false;loadAnalytics();">Försök igen</button></div>';showToast('Kunde inte ladda analys','error');}}
+// ═══ ANALYTICS ═══
+let aOk=false;
+async function loadA(){if(aOk)return;try{const[ls,qs]=await Promise.all([api('/api/listings/stats/'),api('/api/queue/entries/stats/')]);
+document.getElementById('a-stats').innerHTML=`
+<div class="stat"><div class="stat-ic stat-ic-b">🏠</div><div><div class="stat-l">Bostäder</div><div class="stat-v">${ls.total}</div></div></div>
+<div class="stat"><div class="stat-ic stat-ic-g">💰</div><div><div class="stat-l">Snittshyra</div><div class="stat-v">${Math.round(ls.avg_rent||0).toLocaleString('sv-SE')} kr</div></div></div>
+<div class="stat"><div class="stat-ic stat-ic-p">👥</div><div><div class="stat-l">Köplatser</div><div class="stat-v">${qs.total}</div></div></div>
+<div class="stat"><div class="stat-ic stat-ic-a">⭐</div><div><div class="stat-l">Snitt poäng</div><div class="stat-v">${Math.round(qs.avg_points||0)}</div></div></div>`;
+document.getElementById('a-dist').innerHTML=`<table><thead><tr><th>Område</th><th>Antal</th></tr></thead><tbody>${(ls.by_district||[]).map(d=>`<tr><td>${esc(d.district)}</td><td>${d.count}</td></tr>`).join('')}</tbody></table>`;
+document.getElementById('a-queue').innerHTML=`<table><thead><tr><th>Status</th><th>Antal</th></tr></thead><tbody>${(qs.by_status||[]).map(s=>`<tr><td><span class="badge b-${s.status}">${esc(sl(s.status))}</span></td><td>${s.count}</td></tr>`).join('')}</tbody></table>`;
+aOk=true;}catch(e){document.getElementById('a-stats').innerHTML=`<p class="empty err" style="grid-column:1/-1;">Fel <button class="btn btn-g btn-sm" style="margin-top:8px;" onclick="aOk=false;loadA();">Igen</button></p>`;toast('Analys misslyckades',false);}}
 
-loadListings();
+loadList();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
