@@ -1,11 +1,13 @@
 """Serializers for the applications API."""
 from rest_framework import serializers
 
+from django_pyforge.serializers import RustSerializerMixin
+
 from .models import Application
 
 
 # [M11] Explicit fields instead of __all__
-class ApplicationSerializer(serializers.ModelSerializer):
+class ApplicationSerializer(RustSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [

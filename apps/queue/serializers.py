@@ -1,6 +1,8 @@
 """Serializers for the queue API."""
 from rest_framework import serializers
 
+from django_pyforge.serializers import RustSerializerMixin
+
 from .models import QueueConfig, QueueEntry
 
 
@@ -15,7 +17,7 @@ class QueueConfigSerializer(serializers.ModelSerializer):
 
 
 # [M11, M12] Explicit fields + input validation for bounds
-class QueueEntrySerializer(serializers.ModelSerializer):
+class QueueEntrySerializer(RustSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = QueueEntry
         fields = [
