@@ -1,7 +1,7 @@
 """Serializers for the applications API."""
 from rest_framework import serializers
 
-from django_pyforge.serializers import RustSerializerMixin
+from django_clarax.serializers import RustSerializerMixin
 
 from .models import Application
 

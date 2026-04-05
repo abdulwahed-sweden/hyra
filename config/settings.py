@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
-    "django_pyforge",
+    "django_clarax",
     # Local apps
     "apps.listings",
     "apps.queue",

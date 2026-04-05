@@ -12,6 +12,6 @@ Faker==37.1.0
 gunicorn==22.0.0
 whitenoise==6.6.0
 django-cors-headers==4.3.1
-pyforge-django==0.1.2
+clarax-django==0.3.0
 celery==5.4.0
 redis==5.0.4
