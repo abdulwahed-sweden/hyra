@@ -16,9 +16,10 @@ app_port: 7860
 [![Redis](https://img.shields.io/badge/Redis-7-dc382d?logo=redis&logoColor=white)](https://redis.io)
 [![Tests](https://img.shields.io/badge/Tests-59_passing-brightgreen?logo=pytest&logoColor=white)](#tests)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?logo=docker&logoColor=white)](docker-compose.yml)
+[![PyForge](https://img.shields.io/badge/PyForge-0.1.3-ff6b35?logo=rust&logoColor=white)](https://pypi.org/project/pyforge-django/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A backend engineering demo targeting the **Senior Backend Engineer** role at [HomeQ](https://homeq.se) (Vend/Schibsted). Built with HomeQ's exact stack to demonstrate queue-based tenant selection, architectural decision-making, and production patterns.
+A backend engineering demo targeting the **Senior Backend Engineer** role at [HomeQ](https://homeq.se) (Vend/Schibsted). Built with HomeQ's exact stack to demonstrate queue-based tenant selection, architectural decision-making, and production patterns. Serialization hot paths accelerated by [PyForge](https://github.com/abdulwahed-sweden/pyforge) — Rust-native DRF serialization delivering 2.5x throughput on queue leaderboard and application endpoints.
 
 > **Live demo:** [abdulwahed-sweden-hyra.hf.space](https://abdulwahed-sweden-hyra.hf.space) | Local: `docker compose up --build` → [localhost:8000](http://localhost:8000)
 
@@ -54,11 +55,12 @@ python manage.py runserver         # http://localhost:8000
 hyra/
 ├── apps/
 │   ├── queue/           ← Queue engine (the centerpiece)
-│   │   └── models.py       QueueEngine, QueueEntry, QueueConfig
+│   │   ├── models.py       QueueEngine, QueueEntry, QueueConfig
+│   │   └── serializers.py  QueueEntrySerializer + PyForge mixin (2.5x)
 │   ├── listings/        ← Landlord, Municipality, Listing + REST API
 │   ├── search/          ← Elasticsearch with Postgres ILIKE fallback
 │   ├── webhooks/        ← Event delivery to landlord systems
-│   └── applications/    ← Tenant application submissions
+│   └── applications/    ← Tenant application submissions + PyForge mixin (2.6x)
 ├── tests/
 │   ├── test_queue_engine.py   27 tests — eligibility, ranking, edge cases
 │   ├── test_api.py            22 tests — endpoints, validation, errors
@@ -142,6 +144,38 @@ Falls back gracefully if Redis is unavailable — cache is optional, never a sin
 
 ---
 
+## Rust-Accelerated Serialization
+
+**`pyforge-django`** — Drop-in mixin that moves DRF serialization from Python to Rust.
+
+```python
+from django_pyforge.serializers import RustSerializerMixin
+
+class QueueEntrySerializer(RustSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = QueueEntry
+        fields = [...]   # all 18 fields — no other changes needed
+```
+
+### Benchmark: DRF vs PyForge (`many=True`, median of 3 runs)
+
+| Serializer | 1,000 | 5,000 | 10,000 | 20,000 |
+|---|---|---|---|---|
+| **QueueEntry (18 fields)** | | | | |
+| DRF | 52ms | 271ms | 547ms | 1.08s |
+| PyForge | 22ms | 108ms | 220ms | 432ms |
+| Speedup | **2.4x** | **2.5x** | **2.5x** | **2.5x** |
+| **Application (11 fields)** | | | | |
+| DRF | 45ms | 227ms | 464ms | 920ms |
+| PyForge | 18ms | 93ms | 177ms | 356ms |
+| Speedup | **2.5x** | **2.4x** | **2.6x** | **2.6x** |
+
+**How it works:** On `many=True` calls (leaderboard, list views), PyForge bypasses DRF's `ListSerializer` entirely. It calls Rust's `serialize_instance()` per record in a tight loop, patching in `id` and FK fields from Python. Field classification is cached per serializer class — zero per-instance overhead.
+
+**Where it's applied:** `QueueEntrySerializer` and `ApplicationSerializer` — serializers with 80%+ simple model fields. `ListingListSerializer` is excluded (3 computed fields with custom sources make the hybrid path slower than pure DRF).
+
+---
+
 ## Search with Fallback
 
 **`apps/search/views.py`** — Elasticsearch first, Postgres ILIKE on any failure.
@@ -212,6 +246,7 @@ python manage.py test tests -v2    # 59 tests, ~0.7s
 | Denormalized applicant snapshots | Queue entries freeze data at application time — prevents drift |
 | JSON-only renderer | No browsable API — clean JSON responses, production behavior |
 | Explicit serializer fields | No `fields = "__all__"` — prevents accidental data exposure |
+| PyForge on high-volume serializers only | 2.5x on QueueEntry/Application; ListingList excluded — computed fields make hybrid path slower than pure DRF |
 
 ---
 
